@@ -1,0 +1,12 @@
+body {
+  font-family: sans-serif;
+}
+.center {
+  text-align: center;
+}
+table {
+	font-size: 1em;
+}
+.ui-draggable, .ui-droppable {
+	background-position: top;
+}
