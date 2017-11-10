@@ -15,11 +15,11 @@ Noun:
       Singular:
         Masculine:
           Nominative: ο
-          Accusative: [[1: το, τον]]
+          Accusative: [[1|το, τον]]
           Genitive: του
         Feminine:
           Nominative: η
-          Accusative: [[1: τη, την]]
+          Accusative: [[1|τη, την]]
           Genitive: της
         Neuter:
           Nominative: το
@@ -46,7 +46,7 @@ Noun:
           Genitive: ενός
         Feminine:
           Nominative: μία
-          Accusative: [[1: μία, μίαν]]
+          Accusative: [[1|μία, μίαν]]
           Genitive: μίας
         Neuter:
           Nominative: ένα
@@ -59,20 +59,14 @@ Noun:
       Emphatic:
         Singular:
           1st:
-            Masculine:
-            Feminine:
-            Neuter:
-              Nominative: εγώ
-              Accusative: εμένα
-              Genitive: εμένα
+            Nominative: εγώ
+            Accusative: εμένα
+            Genitive: εμένα
           2nd:
-            Masculine:
-            Feminine:
-            Neuter:
-              Nominative: εσύ
-              Accusative: εσένα
-              Genitive: εσένα
-              Vocative: εσύ
+            Nominative: εσύ
+            Accusative: εσένα
+            Genitive: εσένα
+            Vocative: εσύ
           3rd:
             Masculine:
               Nominative: αυτός
@@ -80,7 +74,7 @@ Noun:
               Genitive: αυτού
             Feminine:
               Nominative: αυτή
-              Accusative: [[1: αυτή, αυτήν]]
+              Accusative: [[1|αυτή, αυτήν]]
               Genitive: αυτής
             Neuter:
               Nominative: αυτό
@@ -88,20 +82,14 @@ Noun:
               Genitive: αυτού
         Plural:
           1st:
-            Masculine:
-            Feminine:
-            Neuter:
-              Nominative: εμείς
-              Accusative: εμάς
-              Genitive: εμάς
+            Nominative: εμείς
+            Accusative: εμάς
+            Genitive: εμάς
           2nd:
-            Masculine:
-            Feminine:
-            Neuter:
-              Nominative: εσείς
-              Accusative: εσάς
-              Genitive: εσάς
-              Vocative: εσείς
+            Nominative: εσείς
+            Accusative: εσάς
+            Genitive: εσάς
+            Vocative: εσείς
           3rd:
             Masculine:
               Nominative: αυτοί
@@ -118,17 +106,11 @@ Noun:
       Clitic:
         Singular:
           1st:
-            Masculine:
-            Feminine:
-            Neuter:
-              Accusative: μου
-              Genitive: με
+            Accusative: μου
+            Genitive: με
           2nd:
-            Masculine:
-            Feminine:
-            Neuter:
-              Accusative: σου
-              Genitive: σε
+            Accusative: σου
+            Genitive: σε
           3rd:
             Masculine:
               Nominative: τος
@@ -136,7 +118,7 @@ Noun:
               Genitive: του
             Feminine:
               Nominative: τη
-              Accusative: [[1: τη, την]]
+              Accusative: [[1|τη, την]]
               Genitive: της
             Neuter:
               Nominative: το
@@ -144,17 +126,11 @@ Noun:
               Genitive: του
         Plural:
           1st:
-            Masculine:
-            Feminine:
-            Neuter:
-              Accusative: μας
-              Genitive: μας
+            Accusative: μας
+            Genitive: μας
           2nd:
-            Masculine:
-            Feminine:
-            Neuter:
-              Accusative: σας
-              Genitive: σας
+            Accusative: σας
+            Genitive: σας
           3rd:
             Masculine:
               Nominative: τοι
@@ -162,7 +138,7 @@ Noun:
               Genitive: τους
             Feminine:
               Nominative: τες
-              Accusative: [[2: τις, τες]]
+              Accusative: [[2|τις, τες]]
               Genitive: τους
             Neuter:
               Nominative: τα
