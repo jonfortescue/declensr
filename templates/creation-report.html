@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ title }}</title>
+  <title>{{ title }}: Creation Report</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script>
@@ -37,8 +37,13 @@
 <body>
   <div class="container">
     <div class="row center">
-      <h1>{{ title }}</h1>
-      <div class="col-md-3 lang-selector"><a href="lang/el">Greek</a></div>
+      <h1>{{ title }}: Creation Report</h1>
+    </div>
+    <div class="row">
+      <pre>{{bcop}}</pre>
+    </div>
+    <div class="row center">
+      <a href="">Return</a>
     </div>
   </div>
 </body>

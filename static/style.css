@@ -10,3 +10,8 @@ table {
 .ui-draggable, .ui-droppable {
 	background-position: top;
 }
+.lang-selector {
+  font-size: 30px;
+  padding-top: 25px;
+  padding-bottom: 25px;
+}
