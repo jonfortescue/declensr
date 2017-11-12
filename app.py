@@ -92,6 +92,28 @@ def get_default_word(db, stem, typeName):
     ending = re.sub(r'\{\{\d+\}\}', '', db.find_one({u'namespace': u'grammar', u'name': typeName})['value'])
     return stem + ending
 
+def construct_breadcrumbs(line, prevIndent, breadcrumbs):
+    pair = re.split(r':\s*', line)
+    indent = pair[0].count('  ')
+    key = pair[0].strip()
+    if len(pair) > 1:
+        value = pair[1].strip()
+
+    if len(breadcrumbs) == 0:
+        breadcrumbs.append(key)
+    elif indent == prevIndent:
+        breadcrumbs.pop()
+        breadcrumbs.append(key)
+    elif indent > prevIndent:
+        breadcrumbs.append(key)
+    elif indent < prevIndent:
+        assert (prevIndent - indent + 1) <= len(breadcrumbs)
+        for i in range(prevIndent - indent + 1):
+            breadcrumbs.pop()
+        breadcrumbs.append(key)
+
+    return (indent, key, value)
+
 # index/home page
 @app.route("/")
 def home():
@@ -129,24 +151,7 @@ def lang(lang):
         for line in data:
             if line.strip() == "":
                 continue
-            pair = re.split(r':\s*', line)
-            indent = pair[0].count('  ')
-            key = pair[0].strip()
-            if len(pair) > 1:
-                value = pair[1].strip()
-
-            if len(breadcrumbs) == 0:
-                breadcrumbs.append(key)
-            elif indent == prevIndent:
-                breadcrumbs.pop()
-                breadcrumbs.append(key)
-            elif indent > prevIndent:
-                breadcrumbs.append(key)
-            elif indent < prevIndent:
-                assert (prevIndent - indent + 1) <= len(breadcrumbs)
-                for i in range(prevIndent - indent + 1):
-                    breadcrumbs.pop()
-                breadcrumbs.append(key)
+            (indent, key, value) = construct_breadcrumbs(line, prevIndent, breadcrumbs)
 
             bcop.append(' -> '.join(breadcrumbs) + (' *' if value != "" else ''))
 
@@ -158,7 +163,7 @@ def lang(lang):
                 elif key == "Display":
                     display = value
                     langdb.insert_one({ 'namespace': 'grammar', 'type': 'display', 'value': display })
-                    mongo.db.lang.insert_one({'lang': lang, 'name': 'Greek'})
+                    mongo.db.lang.insert_one({'lang': lang, 'name': display})
                 elif "Rules" in breadcrumbs:
                     assert len(breadcrumbs) == RULES_LEVEL
                     assert int(key) == numRules
@@ -261,12 +266,51 @@ def exercises(lang):
 
 # Add an exercise
 @app.route("/lang/<lang>/exercises/add", methods=["GET", "POST"])
-def add_exercise(lang):
+def add_exercises(lang):
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
         name = mongo.db[lang].find_one({u'type': u'display'})['value']
-        return "Not yet defined. (%s)" % (name)
+        if request.method =="GET":
+            return render_template("exercise-add-edit.html", title="%s: Add Exercises" % (name))
+        elif request.method == "POST":
+            data = request.form['exerciseSchema'].split('\n')
+            prevIndent = 0
+            breadcrumbs = list()
+            bcop = list()
+            parsop = list()
+            exercises = {}
+            for line in data:
+                if line.strip() == "":
+                    continue
+                (indent, key, value) = construct_breadcrumbs(line, prevIndent, breadcrumbs)
+
+                bcop.append(' -> '.join(breadcrumbs) + (' *' if value != "" else ''))
+
+                assert len(breadcrumbs) > 0
+                exerciseName = breadcrumbs[0]
+                if indent == 0:
+                    exercises[exerciseName] = { 'namespace': 'exercise' }
+                    parsop.append("NEW EXERCISE: " + exerciseName)
+                elif value != "":
+                    if indent == 1:
+                        assert len(breadcrumbs) > 1
+                        item = breadcrumbs[1]
+                        isArray =  re.match(r'(\w+)(\d+)', item)
+                        if isArray:
+                            item = isArray.group(1)
+                            index = int(isArray.group(2))
+                            exercises[exerciseName][item] = {}
+                            exercises[exerciseName][item][index] = value
+                            parsop.append("PROPERTY: %s[%d] of %s in %s" % (item, index, value, exerciseName))
+                        else:
+                            exercises[exerciseName][item] = value
+                            parsop.append("PROPERTY: %s of %s in %s" % (item, value, exerciseName))
+                    elif "Display" in breadcrumbs[1]:
+
+
+                prevIndent = indent
+            return render_template("creation-report.html", title="%s Exercises Added" % (name), parsop='\n'.join(parsop), bcop='\n'.join(bcop))
 
 # Edit an exercise
 @app.route("/lang/<lang>/exercises/<exercise>")

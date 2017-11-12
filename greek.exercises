@@ -1,0 +1,45 @@
+Noun Declensions:
+  Namespace: Noun
+  Item0: Vocab
+  Display0:
+    Heading-1: {{0|Stem|Vocab|_id|Singular,Nominative|}}{{0|value|Noun.Type|type|Singular,Nominative|}} Declensions
+    Heading-2: {{0|Gender|Noun.Type|type||}}
+    Table:
+      Table-Group{{Draw-If-Exists Singular}}:
+        Row:
+          Table-Heading: Singular
+        Row:
+          Table-Heading: Nominative
+          Table-Heading: Accusative
+          Table-Heading: Genitive
+          Table-Heading: Vocative
+        Row:
+          Cell: {{0|Stem|Vocab|_id|Singular,Nominative|}}{{0|Input|Noun.Type|type|Singular,Nominative|}}
+          Cell: {{0|Stem|Vocab|_id|Singular,Accusative|}}{{0|Input|Noun.Type|type|Singular,Accusative|}}
+          Cell: {{0|Stem|Vocab|_id|Singular,Genitive|}}{{0|Input|Noun.Type|type|Singular,Genitive|}}
+          Cell: {{0|Stem|Vocab|_id|Singular,Vocative|}}{{0|Input|Noun.Type|type|Singular,Vocative|}}
+      Table-Group{{Draw-If-Exists Plural}}:
+        Row:
+          Table-Heading: Plural
+        Row:
+          Table-Heading: Nominative
+          Table-Heading: Accusative
+          Table-Heading: Genitive
+          Table-Heading: Vocative
+        Row:
+          Cell: {{0|Stem|Vocab|_id|Plural,Nominative|}}{{0|Input|Noun.Type|type|Plural,Nominative|}}
+          Cell: {{0|Stem|Vocab|_id|,Accusative|}}{{0|Input|Noun.Type|type|Plural,Nominative|}}
+          Cell: {{0|Stem|Vocab|_id|Plural,Genitive|}}{{0|Input|Noun.Type|type|Plural,Nominative|}}
+          Cell: {{0|Stem|Vocab|_id|Plural,Vocative|}}{{0|Input|Noun.Type|type|Plural,Nominative|}}
+
+Noun Declensions with Articles:
+  Namespace: Noun
+  Item0: Vocab
+  Generate0: Number
+  Generate1: Case
+  Display0:
+    Heading-1: Definite Article
+    Heading-2: {{0|Input|Noun.Special.Definite Article|Gender||Number,Case}} {{0|Stem|Vocab|_id||Number,Case}}{{0|Input|Noun.Type|type|Singular,Nominative|}}
+  Display1:
+    Heading-1: Indefinite Article
+    Heading-2: {{0|Input|Noun.Special.Indefinite Article|Gender||Number,Case}} {{0|Stem|Vocab|_id||Number,Case}}{{0|Input|Noun.Type|type|Singular,Nominative|}}

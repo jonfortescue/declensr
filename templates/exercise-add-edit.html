@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title }}</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script>
     /*
@@ -37,6 +38,16 @@
   <div class="container">
     <div class="row center">
       <h1>{{ title }}</h1>
+    </div>
+    <div class="row">
+      <h3>Add exercises below.</h3>
+    </div>
+    {{nav}}
+    <div class="row">
+      <form method="POST">
+        <div><textarea name="exerciseSchema" rows=30 style="width: 100%"></textarea></div>
+        <div><input type="submit" value="Add"></div>
+      </form>
     </div>
   </div>
 </body>

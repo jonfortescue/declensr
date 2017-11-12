@@ -41,8 +41,8 @@ For some languages, all the functionality you need will already be built into De
 
 In the future, Declensr will be able to auto-generate grammars from Wiktionary templates. In the meantime, you can base your grammar on the existing grammar files, such as [`greek.grammar`](https://github.com/jonfortescue/declensr/blob/master/greek.grammar).
 
-#### Namespaces, Items, and Attributes
-Grammars are treated as tree structures, where grammar concepts are divided into *Namespaces* (e.g. "Nouns", "Verbs"), *Items* (e.g. "Articles", "Pronouns"), and *Types* (specific ways the concept is handled under that grammar) with individual *Attributes*. Using the example of nouns,
+#### Classes, Items, and Attributes
+Grammars are treated as tree structures, where grammar concepts are divided into *Classes* (e.g. "Nouns", "Verbs"), *Items* (e.g. "Articles", "Pronouns"), and *Types* (specific ways the concept is handled under that grammar) with individual *Attributes*. Using the example of nouns,
 the values under each individual *Type* or *Item* will determine the noun declension given the specific set of attributes.
 
 ```
@@ -60,7 +60,7 @@ Noun:
           Genitive: του
 ```
 
-The above fragment defines the *Namespace* **Noun** and denotes the specific *Attributes* **Nouns** can have (in this case, a grammatical number, gender, and case). It then defines a specific *Item* (the **Definite Article**). From this fragment, we can see that the **Singular, Masculine, Nominative Definite Article** is **ο**, while the **Singular, Masculine, Genitive Definite Article** is **του**.
+The above fragment defines the *Class* **Noun** and denotes the specific *Attributes* **Nouns** can have (in this case, a grammatical number, gender, and case). It then defines a specific *Item* (the **Definite Article**). From this fragment, we can see that the **Singular, Masculine, Nominative Definite Article** is **ο**, while the **Singular, Masculine, Genitive Definite Article** is **του**.
 
 #### Rules
 The above fragment also reveals another feature of grammars: disambiguating *Rules*. Some inflections can have multiple forms depending on the context. Rules help exercises disambiguate between these forms so the proper form is displayed. The syntax for this is ``[[RULE-NUMBER|item0, item1, ...]]``. In this case, the rule used is rule 0, which we can see is:
@@ -70,10 +70,10 @@ Rules:
   0: \1 ([αειουηωάέίόύήώκπτξψ]|μπ|ντ|γκ)
 ```
 
-Rule 0 tells us to use the item at index `1` if the given regular expression returns a match, which effectively means that the **Singular, Masculine, Accusative Definite Article** is **τον** when it precedes a vowel or one of a few consonants/double consonants and **το** otherwise. *Rules* are always defined at the beginning of the grammar and can be used on any value. Currently, *Rules* can either match a regular expression or a grammar *Namespace*.
+Rule 0 tells us to use the item at index `1` if the given regular expression returns a match, which effectively means that the **Singular, Masculine, Accusative Definite Article** is **τον** when it precedes a vowel or one of a few consonants/double consonants and **το** otherwise. *Rules* are always defined at the beginning of the grammar and can be used on any value. Currently, *Rules* can either match a regular expression or a grammar *Class*.
 
 #### More on Attributes
-Attributes can be defined anywhere in the structure. In the above example, they define the *Noun* namespace. However, a subtype of *Noun*, the *Pronoun*, needs additional specific attributes. Thus, we can define it as follows:
+Attributes can be defined anywhere in the structure. In the above example, they define the *Noun* Class. However, a subtype of *Noun*, the *Pronoun*, needs additional specific attributes. Thus, we can define it as follows:
 ```
 Noun: ...
   Special: ...
@@ -83,7 +83,7 @@ Noun: ...
         Person: 1st, 2nd, 3rd
 ```
 
-This fragment defines the **Pronoun** *Item* and gives it its own set of *Attributes*. These *Attributes* stack with those already defined under the noun *Namespace*, so we can define an individual **Pronoun** as follows:
+This fragment defines the **Pronoun** *Item* and gives it its own set of *Attributes*. These *Attributes* stack with those already defined under the noun *Class*, so we can define an individual **Pronoun** as follows:
 ```
 Noun: ...
   Special: ...
@@ -98,7 +98,7 @@ Noun: ...
 ```
 
 #### Types
-*Types* define specific inflection modes for a particular grammar namespace. In our previous example of Greek noun declensions:
+*Types* define specific inflection modes for a particular grammar Class. In our previous example of Greek noun declensions:
 
 ```
 Noun: ...
