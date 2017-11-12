@@ -46,7 +46,8 @@ def extract_attributes(header, attributes, breadcrumbs):
 # index/home page
 @app.route("/")
 def home():
-    return render_template("index.html", title="Which language are you studying?")
+    languages = mongo.db.lang.find()
+    return render_template("index.html", title="Declensr", header="Which language are you studying?", languages=languages)
 
 # Language page
 @app.route("/lang/<lang>", methods=['GET', 'POST', r'DELETE'])
@@ -57,10 +58,12 @@ def lang(lang):
         if mongo.db[lang].count() == 0:
             return render_template("create.html", title=lang)
         else:
-            return "This language has definitions but this program isn't done."
-    # If we're updating the grammar file via create.html, we handle that
+            return render_template("dashboard.html", title="%s Dashboard" % (mongo.db[lang].find_one({u'type': u'display'})['value']))
+    # To delete a language
     elif request.method == r'DELETE':
         mongo.db[lang].remove()
+        return "Language deleted."
+    # If we're updating the grammar file via create.html, we handle that
     elif request.method == 'POST':
         data = request.form['langDef'].split('\n')
         display = ""
@@ -102,6 +105,7 @@ def lang(lang):
                 elif key == "Display":
                     display = value
                     langdb.insert_one({ 'namespace': 'grammar', 'type': 'display', 'value': display })
+                    mongo.db.lang.insert_one({'lang': lang, 'name': 'Greek'})
                 elif "Rules" in breadcrumbs:
                     assert len(breadcrumbs) == RULES_LEVEL
                     assert int(key) == numRules
