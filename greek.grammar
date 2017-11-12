@@ -2,8 +2,8 @@ Language: el
 Display: Greek
 
 Rules:
-  1: \2 ([αειουηωάέίόύήώκπτξψ]|μπ|ντ|γκ)
-  2: \1 {VERB}
+  0: \1 ([αειουηωάέίόύήώκπτξψ]|μπ|ντ|γκ)
+  1: \0 {Verb}
 
 Noun:
   Attribute:
@@ -11,15 +11,15 @@ Noun:
     Gender: Masculine, Feminine, Neuter
     Case: Nominative, Accusative, Genitive, Vocative
   Special:
-    Definite Article:
+    [KEY]Definite Article:
       Singular:
         Masculine:
           Nominative: ο
-          Accusative: [[1|το, τον]]
+          Accusative: [[0|το, τον]]
           Genitive: του
         Feminine:
           Nominative: η
-          Accusative: [[1|τη, την]]
+          Accusative: [[0|τη, την]]
           Genitive: της
         Neuter:
           Nominative: το
@@ -38,7 +38,7 @@ Noun:
           Nominative: τα
           Accusative: τα
           Genitive: των
-    Indefinite Article:
+    [KEY]Indefinite Article:
       Singular:
         Masculine:
           Nominative: ένας
@@ -46,13 +46,13 @@ Noun:
           Genitive: ενός
         Feminine:
           Nominative: μία
-          Accusative: [[1|μία, μίαν]]
+          Accusative: [[0|μία, μίαν]]
           Genitive: μίας
         Neuter:
           Nominative: ένα
           Accusative: ένα
           Genitive: ενός
-    Pronoun:
+    [KEY]Pronoun:
       Attribute:
         Strength: Emphatic, Clitic
         Person: 1st, 2nd, 3rd
@@ -74,7 +74,7 @@ Noun:
               Genitive: αυτού
             Feminine:
               Nominative: αυτή
-              Accusative: [[1|αυτή, αυτήν]]
+              Accusative: [[0|αυτή, αυτήν]]
               Genitive: αυτής
             Neuter:
               Nominative: αυτό
@@ -118,7 +118,7 @@ Noun:
               Genitive: του
             Feminine:
               Nominative: τη
-              Accusative: [[1|τη, την]]
+              Accusative: [[0|τη, την]]
               Genitive: της
             Neuter:
               Nominative: το
@@ -138,116 +138,116 @@ Noun:
               Genitive: τους
             Feminine:
               Nominative: τες
-              Accusative: [[2|τις, τες]]
+              Accusative: [[1|τις, τες]]
               Genitive: τους
             Neuter:
               Nominative: τα
               Accusative: τα
               Genitive: τοθς
-  Types:
+  Type:
     Masculine:
-      el-nM-ος-οι-1:
+      [KEY]el-nM-ος-οι-1:
         Singular:
-          Nominative: {{1}}ός
-          Accusative: {{1}}ό
-          Genitive: {{1}}ού
-          Vocative: {{1}}έ
+          Nominative: {{0}}ός
+          Accusative: {{0}}ό
+          Genitive: {{0}}ού
+          Vocative: {{0}}έ
         Plural:
-          Nominative: {{1}}οί
-          Accusative: {{1}}ών
-          Genitive: {{1}}ούς
-          Vocative: {{1}}οί
-      el-nM-ος-1:
+          Nominative: {{0}}οί
+          Accusative: {{0}}ών
+          Genitive: {{0}}ούς
+          Vocative: {{0}}οί
+      [KEY]el-nM-ος-1:
         Singular:
-          Nominative: {{1}}ός
-          Accusative: {{1}}ό
-          Genitive: {{1}}ού
-          Vocative: {{1}}έ
-      el-nM-οι-1:
+          Nominative: {{0}}ός
+          Accusative: {{0}}ό
+          Genitive: {{0}}ού
+          Vocative: {{0}}έ
+      [KEY]el-nM-οι-1:
         Plural:
-          Nominative: {{1}}οί
-          Accusative: {{1}}ούς
-          Genitive: {{1}}ών
-          Vocative: {{1}}οί
-      el-nM-ος-οι-2a:
-      el-nM-ος-οι-3a:
+          Nominative: {{0}}οί
+          Accusative: {{0}}ούς
+          Genitive: {{0}}ών
+          Vocative: {{0}}οί
+      [KEY]el-nM-ος-οι-2a: *
+      [KEY]el-nM-ος-οι-3a:
         Singular:
-          Nominative: {{1}}ος
-          Accusative: {{1}}ο
+          Nominative: {{0}}ος
+          Accusative: {{0}}ο
+          Genitive: {{0}}ου
+          Vocative: {{0}}ε
+        Plural:
+          Nominative: {{0}}οι
+          Accusative: {{0}}ους
+          Genitive: {{0}}ων
+          Vocative: {{0}}οι
+      [KEY]el-nM-ος-2a: *
+      [KEY]el-nM-ος-3a:
+        Singular:
+          Nominative: {{0}}ος
+          Accusative: {{0}}ο
+          Genitive: {{0}}ου
+          Vocative: {{0}}ε
+      [KEY]el-nM-ος-οι-2b:
+        Singular:
+          Nominative: {{0}}ος
+          Accusative: {{0}}ο
+          Genitive: {{0}}ου
+          Vocative: {{0}}o
+        Plural:
+          Nominative: {{0}}οι
+          Accusative: {{0}}ων
+          Genitive: {{0}}ους
+          Vocative: {{0}}οι
+      [KEY]el-nM-ος-2b:
+        Singular:
+          Nominative: {{0}}ος
+          Accusative: {{0}}ο
+          Genitive: {{0}}ου
+          Vocative: {{0}}o
+      [KEY]el-nM-οι-3a:
+        Plural:
+          Nominative: {{0}}οι
+          Accusative: {{0}}ους
+          Genitive: {{0}}ων
+          Vocative: {{0}}οι
+      [KEY]el-nM-ος-οι-3b:
+        Singular:
+          Nominative: {{0}}ος
+          Accusative: {{0}}ο
           Genitive: {{1}}ου
-          Vocative: {{1}}ε
+          Vocative: {{0}}ε
         Plural:
-          Nominative: {{1}}οι
+          Nominative: {{0}}οι
           Accusative: {{1}}ους
           Genitive: {{1}}ων
-          Vocative: {{1}}οι
-      el-nM-ος-2a:
-      el-nM-ος-3a:
+          Vocative: {{0}}οι
+      [KEY]el-nM-ος-3b:
         Singular:
-          Nominative: {{1}}ος
-          Accusative: {{1}}ο
+          Nominative: {{0}}ος
+          Accusative: {{0}}ο
           Genitive: {{1}}ου
-          Vocative: {{1}}ε
-      el-nM-ος-οι-2b:
+          Vocative: {{0}}ε
+      [KEY]el-nM-ος-οι-3c:
         Singular:
-          Nominative: {{1}}ος
-          Accusative: {{1}}ο
-          Genitive: {{1}}ου
-          Vocative: {{1}}o
+          Nominative: {{0}}ος
+          Accusative: {{0}}ο
+          Genitive: {{0}}ου / {{1}}ου
+          Vocative: {{0}}ε
         Plural:
-          Nominative: {{1}}οι
-          Accusative: {{1}}ων
-          Genitive: {{1}}ους
-          Vocative: {{1}}οι
-      el-nM-ος-2b:
-        Singular:
-          Nominative: {{1}}ος
-          Accusative: {{1}}ο
-          Genitive: {{1}}ου
-          Vocative: {{1}}o
-      el-nM-οι-3a:
-        Plural:
-          Nominative: {{1}}οι
+          Nominative: {{0}}οι
           Accusative: {{1}}ους
           Genitive: {{1}}ων
-          Vocative: {{1}}οι
-      el-nM-ος-οι-3b:
+          Vocative: {{0}}οι
+      [KEY]el-nM-ος-3c:
         Singular:
-          Nominative: {{1}}ος
-          Accusative: {{1}}ο
-          Genitive: {{2}}ου
-          Vocative: {{1}}ε
+          Nominative: {{0}}ος
+          Accusative: {{0}}ο
+          Genitive: {{0}}ου / {{1}}ου
+          Vocative: {{0}}ε
+      [KEY]el-nM-οι-3c:
         Plural:
-          Nominative: {{1}}οι
-          Accusative: {{2}}ους
-          Genitive: {{2}}ων
-          Vocative: {{1}}οι
-      el-nM-ος-3b:
-        Singular:
-          Nominative: {{1}}ος
-          Accusative: {{1}}ο
-          Genitive: {{2}}ου
-          Vocative: {{1}}ε
-      el-nM-ος-οι-3c:
-        Singular:
-          Nominative: {{1}}ος
-          Accusative: {{1}}ο
-          Genitive: {{1}}ου / {{2}}ου
-          Vocative: {{1}}ε
-        Plural:
-          Nominative: {{1}}οι
-          Accusative: {{2}}ους
-          Genitive: {{2}}ων
-          Vocative: {{1}}οι
-      el-nM-ος-3c:
-        Singular:
-          Nominative: {{1}}ος
-          Accusative: {{1}}ο
-          Genitive: {{1}}ου / {{2}}ου
-          Vocative: {{1}}ε
-      el-nM-οι-3c:
-        Plural:
-          Nominative: {{1}}οι
-          Accusative: {{1}}ους / {{2}}ους
-          Genitive: {{1}}ων / {{2}}ων
-          Vocative: {{1}}οι
+          Nominative: {{0}}οι
+          Accusative: {{0}}ους / {{1}}ους
+          Genitive: {{0}}ων / {{1}}ων
+          Vocative: {{0}}οι

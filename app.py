@@ -11,6 +11,12 @@ sys.setdefaultencoding('utf-8')
 app = Flask(__name__)
 mongo = PyMongo(app) # establish MongoDB connection
 
+# constants
+RULES_LEVEL = 2
+ATTRIBUTE_LEVEL = 3
+TYPE_LEVEL = 3
+SPECIAL_LEVEL = 4
+
 # Adapted from https://stackoverflow.com/a/12576755
 def subpattern_exists(mylist, pattern):
     if len(pattern) > len(mylist):
@@ -19,6 +25,18 @@ def subpattern_exists(mylist, pattern):
         if mylist[i] == pattern[0] and mylist[i:i+len(pattern)] == pattern:
             return True
     return False
+
+def extract_attributes(header, attributes, breadcrumbs):
+    start = breadcrumbs.index(header)
+    itemName = breadcrumbs[start]
+    obj = breadcrumbs[0:start+1]
+    attributeValues = breadcrumbs[start + 1:len(breadcrumbs)]
+    attributeList = []
+    for attributeValue in attributeValues:
+        for attribute in attributes:
+            if attributeValue in attribute[0] and subpattern_exists(obj, attribute[1]):
+                attributeList.append((attribute[2], attributeValue))
+    return (itemName, obj, attributeList)
 
 # index/home page
 @app.route("/")
@@ -41,6 +59,7 @@ def lang(lang):
         display = ""
         prevIndent = 0
         breadcrumbs = list()
+        rules = list()
         attributes = list()
         bcop = list()
         parsop = list()
@@ -75,28 +94,25 @@ def lang(lang):
                 elif key == "Display":
                     display = value
                 elif "Rules" in breadcrumbs:
-                    assert len(breadcrumbs) == 2 # we should be at second level for rules
-                    # TODO: Handle rule creation
+                    assert len(breadcrumbs) == RULES_LEVEL
+                    assert int(key) == len(rules)
+                    rules.append(value)
+                    parsop.append("RULE %d: %s" % (int(key), value))
                 elif "Attribute" in breadcrumbs:
-                    assert len(breadcrumbs) >= 3 # we should be past the third level if we're defining attributes
-                    obj = breadcrumbs[0:len(breadcrumbs) - 2]
+                    assert len(breadcrumbs) >= ATTRIBUTE_LEVEL
+                    obj = breadcrumbs[0:len(breadcrumbs) - 2] # 2 = distance of "Attribute" from end of breadcrumbs
                     attributeName = key
                     possibleValues = re.split(r',\s*', value)
                     attribute = (possibleValues, obj, attributeName)
                     attributes.append(attribute)
                     parsop.append("ATTRIBUTE:\t%s.%s, values: %s" % ('.'.join(obj), attributeName, ', '.join(possibleValues)))
                 elif "Special" in breadcrumbs:
-                    assert len(breadcrumbs) >= 4
-                    start = breadcrumbs.index('Special') + 1
-                    itemName = breadcrumbs[start]
-                    obj = breadcrumbs[0:start+1]
-                    attributeValues = breadcrumbs[start + 1:len(breadcrumbs)]
-                    attributeList = []
-                    for attributeValue in attributeValues:
-                        for attribute in attributes:
-                            if attributeValue in attribute[0] and subpattern_exists(obj, attribute[1]):
-                                attributeList.append((attribute[2], attributeValue))
+                    assert len(breadcrumbs) >= SPECIAL_LEVEL
+                    (itemName, obj, attributeList) = extract_attributes('Special', attributes, breadcrumbs)
                     parsop.append("SPECIAL:\t%s %s, attributes: %s" % (itemName, value, ', '.join(': '.join(x) for x in attributeList)))
+                elif "Type" in breadcrumbs:
+                    assert len(breadcrumbs) >= TYPE_LEVEL
+                    # TODO: modify extract_attributes to accommodate attributes existing prior to the itemName declaration
             prevIndent = indent
         return render_template("creation-report.html", title=display, parsop='\n'.join(parsop), bcop='\n'.join(bcop))
     else:
