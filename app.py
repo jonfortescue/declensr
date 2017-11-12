@@ -114,6 +114,69 @@ def construct_breadcrumbs(line, prevIndent, breadcrumbs):
 
     return (indent, key, value)
 
+def render_html_from_schema(schema, tabs):
+    html = ""
+    for key in schema.keys():
+        html += "\n"
+        keyFormat = re.match(r'([\w-]+)(\[\d+\])?(\{\{[\w\s-]+\}\})?', key)
+        keySafe = keyFormat.group(1)
+        keyScript = keyFormat.group(3)
+        attribute = ""
+
+        if keyScript is not None:
+            keyScript = keyScript[2:-2]
+            keyScriptFormat = re.match(r'([\w-]+) ([\w\s-]+)', keyScript)
+            command = keyScriptFormat.group(1)
+            argument = keyScriptFormat.group(2)
+
+            if command == "Span":
+                attribute = " colspan=4"
+
+        if keySafe == "Heading-1":
+            html += "%s<h1%s>" % (tabs, attribute)
+        elif keySafe == "Heading-2":
+            html += "%s<h2%s>" % (tabs, attribute)
+        elif keySafe == "Heading-3":
+            html += "%s<h3%s>" % (tabs, attribute)
+        elif keySafe == "Heading-4":
+            html += "%s<h4%s>" % (tabs, attribute)
+        elif keySafe == "Table":
+            html += "%s<table class=\"table\"%s>" % (tabs, attribute)
+        elif keySafe == "Table-Group":
+            html += "%s<tbody%s>" % (tabs, attribute)
+        elif keySafe == "Row":
+            html += "%s<tr%s>" % (tabs, attribute)
+        elif keySafe == "Table-Heading":
+            html += "%s<th%s>" % (tabs, attribute)
+        elif keySafe == "Cell":
+            html += "%s<td%s>" % (tabs, attribute)
+
+        if type(schema[key]) is not dict:
+            html += schema[key]
+        else:
+            html += render_html_from_schema(schema[key], tabs + "\t")
+
+        if keySafe == "Heading-1":
+            html += "</h1>"
+        elif keySafe == "Heading-2":
+            html += "</h2>"
+        elif keySafe == "Heading-3":
+            html += "</h3>"
+        elif keySafe == "Heading-4":
+            html += "</h4>"
+        elif keySafe == "Table":
+            html += "%s</table>" % (tabs)
+        elif keySafe == "Table-Group":
+            html += "%s</tbody>" % (tabs)
+        elif keySafe == "Row":
+            html += "%s</tr>" % (tabs)
+        elif keySafe == "Table-Heading":
+            html += "</th>"
+        elif keySafe == "Cell":
+            html += "</td>"
+        html += "\n"
+    return html
+
 # index/home page
 @app.route("/")
 def home():
@@ -256,13 +319,17 @@ def edit_vocab(lang, vocabid):
             return "HTTP 405 Method Not Allowed"
 
 # Exercise dashboard
-@app.route("/lang/<lang>/exercises")
+@app.route("/lang/<lang>/exercises", methods=["GET", r"DELETE"])
 def exercises(lang):
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
+        if request.method == r'DELETE':
+            mongo.db[lang].remove({ u'namespace': u'exercise' })
         name = mongo.db[lang].find_one({u'type': u'display'})['value']
-        return "Not yet defined. (%s)" % (name)
+        exercises = mongo.db[lang].find({ u'namespace': u'exercise' })
+        return render_template("exercises.html", title="%s: Exercises" % (name), exercises=exercises,
+                               nav=nav_header([("Declensr", "/"), (name, "/lang/" + lang), ("Exercises", "/lang/%s/exercises" % (lang))]))
 
 # Add an exercise
 @app.route("/lang/<lang>/exercises/add", methods=["GET", "POST"])
@@ -337,8 +404,23 @@ def add_exercises(lang):
                 mongo.db[lang].insert_one(exercises[exercise])
             return render_template("creation-report.html", title="%s Exercises Added" % (name), parsop='\n'.join(parsop), bcop='\n'.join(bcop))
 
+# Preview an exercise
+@app.route("/lang/<lang>/exercises/<exercise_id>")
+def preview_exercise(lang, exercise_id):
+    if mongo.db[lang].count() == 0:
+        return redirect("/lang/%s" % (lang))
+    else:
+        name = mongo.db[lang].find_one({u'type': u'display'})['value']
+        exercise = mongo.db[lang].find_one({ u'_id': ObjectId(exercise_id) })
+        displays = {}
+        for displayKey in exercise['Display'].keys():
+            currentDisplay = exercise['Display'][displayKey]
+            tabs = ""
+            displays[displayKey] = Markup(render_html_from_schema(currentDisplay, tabs))
+        return render_template("exercise-preview.html", title="Greek Exercise: " + exercise['name'], displays=displays)
+
 # Edit an exercise
-@app.route("/lang/<lang>/exercises/<exercise>")
+@app.route("/lang/<lang>/exercises/<exercise>/edit")
 def edit_exercise(lang, exercise):
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))

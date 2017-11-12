@@ -36,24 +36,12 @@
 </head>
 <body>
   <div class="container">
-    {{nav}}
     <div class="row center">
       <h1>{{ title }}</h1>
     </div>
-    <div class="row center">
-      <table class="table">
-        <tr>
-          <th>Exercise</th><th>Preview</th><th>Edit</th>
-        </tr>
-        {% for exercise in exercises %}
-        <tr>
-          <td><a href="exercises/{{exercise['_id']}}">{{ exercise['name'] }}</a></td>
-          <td><a href="exercises/{{ exercise['_id'] }}/do">Do</a></td>
-          <td><a href="exercises/{{ exercise['_id'] }}/edit">Edit</a></td>
-        </tr>
-        {% endfor %}
-      </table>
-    </div>
+    {% for html in displays.keys() %}
+    {{displays[html]}}
+    {% endfor %}
   </div>
 </body>
 </html>
