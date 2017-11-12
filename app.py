@@ -106,7 +106,7 @@ def lang(lang):
     if request.method == 'GET':
         # If the language hasn't been defined in the database, it needs to be created
         if mongo.db[lang].count() == 0:
-            return render_template("create.html", title=lang, nav=nav_header[("Declensr", "/"), ("Create " + lang, "/lang/" + lang)])
+            return render_template("create.html", title=lang, nav=nav_header([("Declensr", "/"), ("Create " + lang, "/lang/" + lang)]))
         else:
             display = mongo.db[lang].find_one({u'type': u'display'})['value']
             return render_template("dashboard.html", lang=lang, title="%s Dashboard" % (display),
@@ -236,10 +236,10 @@ def edit_vocab(lang, vocabid):
         if request.method == "GET":
             (name, types, numStemsForType, maxStemNum) = vocab_add_edit_generic_get(lang)
             word = mongo.db[lang].find_one({"_id": ObjectId(vocabid)})
-            return render_template("vocab-add-edit.html", title="%s: Add Vocab Word" % (name), types=types, numStemsForType=numStemsForType,
+            word_display = get_default_word(mongo.db[lang], word['stems'][0], word['type'])
+            return render_template("vocab-add-edit.html", title="%s: Editing %s" % (name, word_display), types=types, numStemsForType=numStemsForType,
                                    maxStemNum=maxStemNum, word=word, nav=nav_header([("Declensr", "/"), (name, "/lang/" + lang),
-                                   ("Vocab", "/lang/%s/vocab" % (lang)), ("Edit " + get_default_word(mongo.db[lang], word['stems'][0],
-                                   word['type']), "/lang/%s/vocab/%s" % (lang, vocabid))]))
+                                   ("Vocab", "/lang/%s/vocab" % (lang)), ("Editing " + word_display, "/lang/%s/vocab/%s" % (lang, vocabid))]))
         elif request.method == "POST":
             (vocabType, stems) = vocab_add_edit_generic_post(lang)
             mongo.db[lang].update_one({ u'_id': ObjectId(vocabid) }, { '$set': { u'type': vocabType, u'stems': stems } })
