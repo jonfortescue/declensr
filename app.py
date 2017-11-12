@@ -28,12 +28,12 @@ def subpattern_exists(mylist, pattern):
 
 def extract_attributes(header, attributes, breadcrumbs):
     start = breadcrumbs.index(header)
-    namespace = breadcrumbs[0:start+1]
     attributeValues = breadcrumbs[start + 1:len(breadcrumbs)]
     for item in attributeValues:
         if "[KEY]" in item:
             assert len(item) > 5
             itemName = item[5:]
+            namespace = breadcrumbs[0:breadcrumbs.index(item)+1]
     attributeList = []
     for attributeValue in attributeValues:
         if attributeValue == "[KEY]%s" % (itemName):
@@ -58,7 +58,8 @@ def lang(lang):
         if mongo.db[lang].count() == 0:
             return render_template("create.html", title=lang)
         else:
-            return render_template("dashboard.html", title="%s Dashboard" % (mongo.db[lang].find_one({u'type': u'display'})['value']))
+            return render_template("dashboard.html", title="%s Dashboard" % (mongo.db[lang].find_one({u'type': u'display'})['value']),
+                                   pronouns=mongo.db[lang].find({ u'type': u'special', u'name': u'Pronoun' }))
     # To delete a language
     elif request.method == r'DELETE':
         mongo.db[lang].remove()
