@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect
 from flask_pymongo import PyMongo
 import sys
 import re
+from bson.objectid import ObjectId
 
 # without this, encoding issues cause errors
 reload(sys)
@@ -42,6 +43,27 @@ def extract_attributes(header, attributes, breadcrumbs):
             if attributeValue in attribute[0] and subpattern_exists(namespace, attribute[1]):
                 attributeList.append((attribute[2], attributeValue))
     return (itemName, namespace, attributeList)
+
+def vocab_add_edit_generic_get(lang):
+    name = mongo.db[lang].find_one({u'type': u'display'})['value']
+    typesFromDb = mongo.db[lang].find({u'namespace': u'grammar', u'type': u'type'})
+    types = []
+    numStemsForType = {}
+    for typ in typesFromDb:
+        types.append(typ['name'])
+    types = list(set(types))
+    types.sort()
+    maxStemNum = 0
+    for typ in types:
+        numStemsForType[typ] = number_stems_in_type(mongo.db[lang], typ)
+        if numStemsForType[typ] > maxStemNum:
+            maxStemNum = numStemsForType[typ]
+    return (name, types, numStemsForType, maxStemNum)
+
+def vocab_add_edit_generic_post(lang):
+    vocabType = request.form['type']
+    stems = request.form.getlist('stemBox')[0:number_stems_in_type(mongo.db[lang], vocabType)]
+    return (vocabType, stems)
 
 def number_stems_in_type(db, typeName):
     types = db.find({u'namespace': 'grammar', u'name': typeName})
@@ -179,37 +201,36 @@ def add_vocab(lang):
         return redirect("/lang/%s" % (lang))
     else:
         if request.method == "GET":
-            name = mongo.db[lang].find_one({u'type': u'display'})['value']
-            typesFromDb = mongo.db[lang].find({u'namespace': u'grammar', u'type': u'type'})
-            types = []
-            numStemsForType = {}
-            for typ in typesFromDb:
-                types.append(typ['name'])
-            types = list(set(types))
-            types.sort()
-            maxStemNum = 0
-            for typ in types:
-                numStemsForType[typ] = number_stems_in_type(mongo.db[lang], typ)
-                if numStemsForType[typ] > maxStemNum:
-                    maxStemNum = numStemsForType[typ]
+            (name, types, numStemsForType, maxStemNum) = vocab_add_edit_generic_get(lang)
             return render_template("vocab-add-edit.html", title="%s: Add Vocab Word" % (name), types=types, numStemsForType=numStemsForType,
-                                   maxStemNum=maxStemNum)
+                                   maxStemNum=maxStemNum, word=None)
         elif request.method == "POST":
-            vocabType = request.form['type']
-            stems = request.form.getlist('stemBox')[0:number_stems_in_type(mongo.db[lang], vocabType)]
-            mongo.db[lang].insert_one({ 'namespace': 'vocab', 'type': vocabType, 'stems': stems })
+            (vocabType, stems) = vocab_add_edit_generic_post(lang)
+            mongo.db[lang].insert_one({ u'namespace': 'vocab', u'type': vocabType, u'stems': stems })
             return redirect("/lang/%s/vocab/add" % (lang))
         else:
             return "HTTP 405 Method Not Allowed"
 
 # Edit a vocab word
-@app.route("/lang/<lang>/vocab/<vocabid>")
+@app.route("/lang/<lang>/vocab/<vocabid>", methods=["GET", "POST", r"DELETE"])
 def edit_vocab(lang, vocabid):
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
-        name = mongo.db[lang].find_one({u'type': u'display'})['value']
-        return "Not yet defined. (%s, %s)" % (name, vocabid)
+        if request.method == "GET":
+            (name, types, numStemsForType, maxStemNum) = vocab_add_edit_generic_get(lang)
+            word = mongo.db[lang].find_one({"_id": ObjectId(vocabid)})
+            return render_template("vocab-add-edit.html", title="%s: Add Vocab Word" % (name), types=types, numStemsForType=numStemsForType,
+                                   maxStemNum=maxStemNum, word=word)
+        elif request.method == "POST":
+            (vocabType, stems) = vocab_add_edit_generic_post(lang)
+            mongo.db[lang].update_one({ u'_id': ObjectId(vocabid) }, { '$set': { u'type': vocabType, u'stems': stems } })
+            return redirect("/lang/%s/vocab/%s" % (lang, vocabid))
+        elif request.method == r"DELETE":
+            mongo.db[lang].remove_one({ u'_id': ObjectId(vocabid) })
+            return redirect("/lang/%s/vocab" % (lang))
+        else:
+            return "HTTP 405 Method Not Allowed"
 
 # Exercise dashboard
 @app.route("/lang/<lang>/exercises")

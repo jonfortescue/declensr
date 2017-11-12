@@ -64,17 +64,22 @@
         <div>
           <select name="type" id="typeSelect" onchange="javascript:update()">
             {% for type in types: %}
-            <option id="{{type}}">{{ type }}</options>
+            <option id="{{type}}"{% if word != None and type == word['type'] %} selected{% endif %}>{{ type }}</options>
             {% endfor %}
           </select>
         </div>
         <div>
           {% for i in range(maxStemNum): %}
-          <div name="stem" style="visibility: hidden;">Stem {{i+1}}: <input name="stemBox" type="text"></div>
+          <div name="stem" style="visibility: hidden;">Stem {{i+1}}: <input name="stemBox" type="text" value="{% if word != None %}{{ word['stems'][i] }}{% endif %}"></div>
           {% endfor %}
         </div>
-        <input type="submit" value="Add">
+        <input type="submit" value="{%if word != None%}Edit{%else%}Add{%endif%}">
       </form>
+      {% if word != None %}
+      <form method="DELETE">
+        <input type="submit" value="Delete">
+      </form>
+      {% endif %}
     </div>
   </div>
 </body>
