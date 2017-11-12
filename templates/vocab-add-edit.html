@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title }}</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script>
     /*
@@ -32,11 +33,48 @@
     for the JavaScript code in this page.
     */
   </script>
+  <script>
+    var numStemsForType = {
+      {% for type in numStemsForType: %}
+      "{{ type }}": {{ numStemsForType[type] }}, {% endfor %}
+    };
+
+    function update() {
+      type = document.getElementById('typeSelect').value;
+      stemBoxes = document.getElementsByName('stem');
+      numBoxes = numStemsForType[type];
+      for (i = 0; i < stemBoxes.length; i++) {
+        if (i < numBoxes) {
+          stemBoxes[i].style = "visibility: visible;"
+        }
+        else {
+          stemBoxes[i].style = "visibility: hidden;"
+        }
+      }
+    }
+  </script>
 </head>
-<body>
+<body onload="javascript:update()">
   <div class="container">
     <div class="row center">
       <h1>{{ title }}</h1>
+    </div>
+    <div class="row center">
+      <form method="POST">
+        <div>
+          <select name="type" id="typeSelect" onchange="javascript:update()">
+            {% for type in types: %}
+            <option id="{{type}}">{{ type }}</options>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          {% for i in range(maxStemNum): %}
+          <div name="stem" style="visibility: hidden;">Stem {{i+1}}: <input name="stemBox" type="text"></div>
+          {% endfor %}
+        </div>
+        <input type="submit" value="Add">
+      </form>
     </div>
   </div>
 </body>

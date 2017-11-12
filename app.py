@@ -43,6 +43,23 @@ def extract_attributes(header, attributes, breadcrumbs):
                 attributeList.append((attribute[2], attributeValue))
     return (itemName, namespace, attributeList)
 
+def number_stems_in_type(db, typeName):
+    types = db.find({u'namespace': 'grammar', u'name': typeName})
+    maxStemNum = 0
+    for typ in types:
+        if re.match(r'\{\{(\d+)\}\}', typ['value']) is None:
+            print typ
+            stemNum = 0
+        else:
+            stemNum = int(re.match(r'\{\{(\d+)\}\}', typ['value']).group(1))
+        if stemNum > maxStemNum:
+            maxStemNum = stemNum
+    return maxStemNum + 1
+
+def get_default_word(db, stem, typeName):
+    ending = re.sub(r'\{\{\d+\}\}', '', db.find_one({u'namespace': u'grammar', u'name': typeName})['value'])
+    return stem + ending
+
 # index/home page
 @app.route("/")
 def home():
@@ -62,6 +79,7 @@ def lang(lang):
     # To delete a language
     elif request.method == r'DELETE':
         mongo.db[lang].remove()
+        mongo.db.lang.remove({ 'lang': lang })
         return "Language deleted."
     # If we're updating the grammar file via create.html, we handle that
     elif request.method == 'POST':
@@ -149,16 +167,40 @@ def vocab(lang):
         return redirect("/lang/%s" % (lang))
     else:
         name = mongo.db[lang].find_one({u'type': u'display'})['value']
-        return render_template("vocab.html", title="%s Vocab List" % (name))
+        vocab = mongo.db[lang].find({ u'namespace': u'vocab' })
+        vocab = list(((get_default_word(mongo.db[lang], word['stems'][0], word['type']), word['_id']) for word in vocab))
+        vocab.sort(key=lambda word: word[0].lower())
+        return render_template("vocab.html", title="%s Vocab List" % (name), vocab=vocab)
 
 # Add vocab
-@app.route("/lang/<lang>/vocab/add")
+@app.route("/lang/<lang>/vocab/add", methods=["GET", "POST"])
 def add_vocab(lang):
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
-        name = mongo.db[lang].find_one({u'type': u'display'})['value']
-        return "Not yet defined. (%s)" % (name)
+        if request.method == "GET":
+            name = mongo.db[lang].find_one({u'type': u'display'})['value']
+            typesFromDb = mongo.db[lang].find({u'namespace': u'grammar', u'type': u'type'})
+            types = []
+            numStemsForType = {}
+            for typ in typesFromDb:
+                types.append(typ['name'])
+            types = list(set(types))
+            types.sort()
+            maxStemNum = 0
+            for typ in types:
+                numStemsForType[typ] = number_stems_in_type(mongo.db[lang], typ)
+                if numStemsForType[typ] > maxStemNum:
+                    maxStemNum = numStemsForType[typ]
+            return render_template("vocab-add-edit.html", title="%s: Add Vocab Word" % (name), types=types, numStemsForType=numStemsForType,
+                                   maxStemNum=maxStemNum)
+        elif request.method == "POST":
+            vocabType = request.form['type']
+            stems = request.form.getlist('stemBox')[0:number_stems_in_type(mongo.db[lang], vocabType)]
+            mongo.db[lang].insert_one({ 'namespace': 'vocab', 'type': vocabType, 'stems': stems })
+            return redirect("/lang/%s/vocab/add" % (lang))
+        else:
+            return "HTTP 405 Method Not Allowed"
 
 # Edit a vocab word
 @app.route("/lang/<lang>/vocab/<vocabid>")
@@ -179,7 +221,7 @@ def exercises(lang):
         return "Not yet defined. (%s)" % (name)
 
 # Add an exercise
-@app.route("/lang/<lang>/exercises/add")
+@app.route("/lang/<lang>/exercises/add", methods=["GET", "POST"])
 def add_exercise(lang):
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
