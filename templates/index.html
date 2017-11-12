@@ -39,6 +39,9 @@
     <div class="row center">
       <h1>{{ title }}</h1>
       <h2>{{ header }}</h2>
+    </div>
+    {{nav}}
+    <div class="row center">
       {% for lang in languages: %}
       <div class="col-md-3 lang-selector"><a href="lang/{{ lang['lang'] }}">{{ lang['name'] }}</a></div>
       {% endfor %}

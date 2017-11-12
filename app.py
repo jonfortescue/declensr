@@ -1,5 +1,5 @@
  # -*- coding: utf-8 -*-
-from flask import Flask, render_template, request, redirect
+from flask import Flask, Markup, render_template, request, redirect
 from flask_pymongo import PyMongo
 import sys
 import re
@@ -17,6 +17,16 @@ RULES_LEVEL = 2
 ATTRIBUTE_LEVEL = 3
 TYPE_LEVEL = 3
 SPECIAL_LEVEL = 4
+
+def nav_header(crumbs):
+    header = """<nav aria-label="breadcrumb" role="navigation">"""
+    header += """\t<ol class="breadcrumb">"""
+    for page in crumbs[:-1]:
+        header += """<li class="breadcrumb-item"><a href="%s">%s</a></li>""" % (page[1], page[0])
+    header += """<li class="breadcrumb-item active" aria-current="page">%s</li>""" % (crumbs[-1][0])
+    header += "\t</ol>"
+    header += "</nav>"
+    return Markup(header)
 
 # Adapted from https://stackoverflow.com/a/12576755
 def subpattern_exists(mylist, pattern):
@@ -86,7 +96,8 @@ def get_default_word(db, stem, typeName):
 @app.route("/")
 def home():
     languages = mongo.db.lang.find()
-    return render_template("index.html", title="Declensr", header="Which language are you studying?", languages=languages)
+    return render_template("index.html", title="Declensr", header="Which language are you studying?", languages=languages,
+                           nav=nav_header([("Declensr", "/")]))
 
 # Language page
 @app.route("/lang/<lang>", methods=['GET', 'POST', r'DELETE'])
@@ -95,9 +106,11 @@ def lang(lang):
     if request.method == 'GET':
         # If the language hasn't been defined in the database, it needs to be created
         if mongo.db[lang].count() == 0:
-            return render_template("create.html", title=lang)
+            return render_template("create.html", title=lang, nav=nav_header[("Declensr", "/"), ("Create " + lang, "/lang/" + lang)])
         else:
-            return render_template("dashboard.html", lang=lang, title="%s Dashboard" % (mongo.db[lang].find_one({u'type': u'display'})['value']))
+            display = mongo.db[lang].find_one({u'type': u'display'})['value']
+            return render_template("dashboard.html", lang=lang, title="%s Dashboard" % (display),
+                                   nav=nav_header([("Declensr", "/"), (display, "/lang/" + lang)]))
     # To delete a language
     elif request.method == r'DELETE':
         mongo.db[lang].remove()
@@ -178,7 +191,8 @@ def lang(lang):
                         dbvalue[attribute[0]] = attribute[1]
                     langdb.insert_one(dbvalue)
             prevIndent = indent
-        return render_template("creation-report.html", title=display, parsop='\n'.join(parsop), bcop='\n'.join(bcop))
+        return render_template("creation-report.html", title=display, parsop='\n'.join(parsop), bcop='\n'.join(bcop),
+                               nav=nav_header([("Declensr", "/"), (display, "/lang/" + lang), ("Creation Report", "/")]))
     else:
         return "HTTP 405 Method Not Allowed"
 
@@ -192,7 +206,8 @@ def vocab(lang):
         vocab = mongo.db[lang].find({ u'namespace': u'vocab' })
         vocab = list(((get_default_word(mongo.db[lang], word['stems'][0], word['type']), word['_id']) for word in vocab))
         vocab.sort(key=lambda word: word[0].lower())
-        return render_template("vocab.html", title="%s Vocab List" % (name), vocab=vocab)
+        return render_template("vocab.html", title="%s Vocab List" % (name), vocab=vocab,
+                               nav=nav_header([("Declensr", "/"), (name, "/lang/" + lang), ("Vocab", "/lang/%s/vocab" % (lang))]))
 
 # Add vocab
 @app.route("/lang/<lang>/vocab/add", methods=["GET", "POST"])
@@ -203,7 +218,8 @@ def add_vocab(lang):
         if request.method == "GET":
             (name, types, numStemsForType, maxStemNum) = vocab_add_edit_generic_get(lang)
             return render_template("vocab-add-edit.html", title="%s: Add Vocab Word" % (name), types=types, numStemsForType=numStemsForType,
-                                   maxStemNum=maxStemNum, word=None)
+                                   maxStemNum=maxStemNum, word=None, nav=nav_header([("Declensr", "/"), (name, "/lang/" + lang),
+                                   ("Vocab", "/lang/%s/vocab" % (lang)), ("Add Word", "/lang/%s/vocab/add" % (lang))]))
         elif request.method == "POST":
             (vocabType, stems) = vocab_add_edit_generic_post(lang)
             mongo.db[lang].insert_one({ u'namespace': 'vocab', u'type': vocabType, u'stems': stems })
@@ -221,7 +237,9 @@ def edit_vocab(lang, vocabid):
             (name, types, numStemsForType, maxStemNum) = vocab_add_edit_generic_get(lang)
             word = mongo.db[lang].find_one({"_id": ObjectId(vocabid)})
             return render_template("vocab-add-edit.html", title="%s: Add Vocab Word" % (name), types=types, numStemsForType=numStemsForType,
-                                   maxStemNum=maxStemNum, word=word)
+                                   maxStemNum=maxStemNum, word=word, nav=nav_header([("Declensr", "/"), (name, "/lang/" + lang),
+                                   ("Vocab", "/lang/%s/vocab" % (lang)), ("Edit " + get_default_word(mongo.db[lang], word['stems'][0],
+                                   word['type']), "/lang/%s/vocab/%s" % (lang, vocabid))]))
         elif request.method == "POST":
             (vocabType, stems) = vocab_add_edit_generic_post(lang)
             mongo.db[lang].update_one({ u'_id': ObjectId(vocabid) }, { '$set': { u'type': vocabType, u'stems': stems } })
