@@ -27,7 +27,7 @@ To build Declensr:
 Declensr is completely FOSS and designed to be highly extensible. If you want to use Declensr to study a language that has not been implemented yet, you will need to do some legwork to get it working. If you do this, please open a pull request to the main repo so everyone else can enjoy that language as well!
 
 ### Creating new wordlists
-In the future, Declensr will have a to auto-generate wordlists. In the meantime, manual entry of wordlists is greatly appreciated!
+In the future, Declensr will be able to auto-generate wordlists from Wiktionary. In the meantime, manual entry of wordlists is greatly appreciated!
 
 ### Creating new exercises
 If grammars are Declensr's skeleton, the exercises are its organs. Exercises make Declensr worth using, and we can never have enough. If you think of an exercise useful to you, Declensr makes it easy to implement that exercise. Once you've done that, make a pull request and share it with everyone!
@@ -39,13 +39,14 @@ Some exercises may require adding new functionality to Declensr. If you're confi
 ### Implementing new grammars
 For some languages, all the functionality you need will already be built into Declensr's codebase. In these cases, all you need to do is create a new grammar definition for Declensr to parse. Thankfully, this isn't to difficult.
 
-In the future, Declensr will have a tool to auto-generate grammars. In the meantime, you can base your grammar on the existing grammar files, such as [`greek.grammar`](https://github.com/jonfortescue/declensr/blob/master/greek.grammar).
+In the future, Declensr will be able to auto-generate grammars from Wiktionary templates. In the meantime, you can base your grammar on the existing grammar files, such as [`greek.grammar`](https://github.com/jonfortescue/declensr/blob/master/greek.grammar).
 
 #### Namespaces, Items, and Attributes
 Grammars are treated as tree structures, where grammar concepts are divided into *Namespaces* (e.g. "Nouns", "Verbs"), *Items* (e.g. "Articles", "Pronouns"), and *Types* (specific ways the concept is handled under that grammar) with individual *Attributes*. Using the example of nouns,
 the values under each individual *Type* or *Item* will determine the noun declension given the specific set of attributes.
 
-`Noun:
+```
+Noun:
   Attribute:
     Number: Singular, Plural
     Gender: Masculine, Feminine, Neuter
@@ -57,31 +58,34 @@ the values under each individual *Type* or *Item* will determine the noun declen
           Nominative: ο
           Accusative: [[0|το, τον]]
           Genitive: του
-`
+```
 
 The above fragment defines the *Namespace* **Noun** and denotes the specific *Attributes* **Nouns** can have (in this case, a grammatical number, gender, and case). It then defines a specific *Item* (the **Definite Article**). From this fragment, we can see that the **Singular, Masculine, Nominative Definite Article** is **ο**, while the **Singular, Masculine, Genitive Definite Article** is **του**.
 
 #### Rules
 The above fragment also reveals another feature of grammars: disambiguating *Rules*. Some inflections can have multiple forms depending on the context. Rules help exercises disambiguate between these forms so the proper form is displayed. The syntax for this is ``[[RULE-NUMBER|item0, item1, ...]]``. In this case, the rule used is rule 0, which we can see is:
 
-`Rules:
+```
+Rules:
   0: \1 ([αειουηωάέίόύήώκπτξψ]|μπ|ντ|γκ)
-`
+```
 
 Rule 0 tells us to use the item at index `1` if the given regular expression returns a match, which effectively means that the **Singular, Masculine, Accusative Definite Article** is **τον** when it precedes a vowel or one of a few consonants/double consonants and **το** otherwise. *Rules* are always defined at the beginning of the grammar and can be used on any value. Currently, *Rules* can either match a regular expression or a grammar *Namespace*.
 
 #### More on Attributes
 Attributes can be defined anywhere in the structure. In the above example, they define the *Noun* namespace. However, a subtype of *Noun*, the *Pronoun*, needs additional specific attributes. Thus, we can define it as follows:
-`Noun: ...
+```
+Noun: ...
   Special: ...
     [KEY]Pronoun:
       Attribute:
         Strength: Emphatic, Clitic
         Person: 1st, 2nd, 3rd
-`
+```
 
 This fragment defines the **Pronoun** *Item* and gives it its own set of *Attributes*. These *Attributes* stack with those already defined under the noun *Namespace*, so we can define an individual **Pronoun** as follows:
-`Noun: ...
+```
+Noun: ...
   Special: ...
     [KEY]Pronoun:
       Emphatic:
@@ -91,12 +95,13 @@ This fragment defines the **Pronoun** *Item* and gives it its own set of *Attrib
               Nominative: αυτός
               Accusative: αυτόν
               Genitive: αυτού`
-`
+```
 
 #### Types
 *Types* define specific inflection modes for a particular grammar namespace. In our previous example of Greek noun declensions:
 
-`Noun: ...
+```
+Noun: ...
   Type:
     Masculine:
       [KEY]el-nM-ος-οι-1:
@@ -110,13 +115,14 @@ This fragment defines the **Pronoun** *Item* and gives it its own set of *Attrib
           Accusative: {{0}}ών
           Genitive: {{0}}ούς
           Vocative: {{0}}οί
-`
+```
 
 It is worth noting from this that the **Masculine** *Attribute* precedes the *Type* declaration. This means that all declensions in that type have the gender **Masculine**. This allows one to quickly define a large number of *Types* with common *Attributes*.
 
 The `{{0}}` on this *Type* determine which **stem** will be used by Declensr. This particular *Type* only has one stem, but some *Types*...
 
-`      [KEY]el-nM-ος-οι-3b:
+```
+      [KEY]el-nM-ος-οι-3b:
         Singular:
           Nominative: {{0}}ος
           Accusative: {{0}}ο
@@ -127,7 +133,7 @@ The `{{0}}` on this *Type* determine which **stem** will be used by Declensr. Th
           Accusative: {{1}}ους
           Genitive: {{1}}ων
           Vocative: {{0}}οι
-`
+```
 
 can have multiple stems. In this case, **Nominative**, **Accusative** **Singular**, and **Vocative** nouns will all take the first stem, while the **Genitive** and **Accusative** **Plural** forms will take the second.
 
