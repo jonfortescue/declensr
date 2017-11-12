@@ -1,5 +1,5 @@
  # -*- coding: utf-8 -*-
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_pymongo import PyMongo
 import sys
 import re
@@ -58,8 +58,7 @@ def lang(lang):
         if mongo.db[lang].count() == 0:
             return render_template("create.html", title=lang)
         else:
-            return render_template("dashboard.html", title="%s Dashboard" % (mongo.db[lang].find_one({u'type': u'display'})['value']),
-                                   pronouns=mongo.db[lang].find({ u'type': u'special', u'name': u'Pronoun' }))
+            return render_template("dashboard.html", lang=lang, title="%s Dashboard" % (mongo.db[lang].find_one({u'type': u'display'})['value']))
     # To delete a language
     elif request.method == r'DELETE':
         mongo.db[lang].remove()
@@ -142,3 +141,66 @@ def lang(lang):
         return render_template("creation-report.html", title=display, parsop='\n'.join(parsop), bcop='\n'.join(bcop))
     else:
         return "HTTP 405 Method Not Allowed"
+
+# Vocab dashboard
+@app.route("/lang/<lang>/vocab")
+def vocab(lang):
+    if mongo.db[lang].count() == 0:
+        return redirect("/lang/%s" % (lang))
+    else:
+        name = mongo.db[lang].find_one({u'type': u'display'})['value']
+        return render_template("vocab.html", title="%s Vocab List" % (name))
+
+# Add vocab
+@app.route("/lang/<lang>/vocab/add")
+def add_vocab(lang):
+    if mongo.db[lang].count() == 0:
+        return redirect("/lang/%s" % (lang))
+    else:
+        name = mongo.db[lang].find_one({u'type': u'display'})['value']
+        return "Not yet defined. (%s)" % (name)
+
+# Edit a vocab word
+@app.route("/lang/<lang>/vocab/<vocabid>")
+def edit_vocab(lang, vocabid):
+    if mongo.db[lang].count() == 0:
+        return redirect("/lang/%s" % (lang))
+    else:
+        name = mongo.db[lang].find_one({u'type': u'display'})['value']
+        return "Not yet defined. (%s, %s)" % (name, vocabid)
+
+# Exercise dashboard
+@app.route("/lang/<lang>/exercises")
+def exercises(lang):
+    if mongo.db[lang].count() == 0:
+        return redirect("/lang/%s" % (lang))
+    else:
+        name = mongo.db[lang].find_one({u'type': u'display'})['value']
+        return "Not yet defined. (%s)" % (name)
+
+# Add an exercise
+@app.route("/lang/<lang>/exercises/add")
+def add_exercise(lang):
+    if mongo.db[lang].count() == 0:
+        return redirect("/lang/%s" % (lang))
+    else:
+        name = mongo.db[lang].find_one({u'type': u'display'})['value']
+        return "Not yet defined. (%s)" % (name)
+
+# Edit an exercise
+@app.route("/lang/<lang>/exercises/<exercise>")
+def edit_exercise(lang, exercise):
+    if mongo.db[lang].count() == 0:
+        return redirect("/lang/%s" % (lang))
+    else:
+        name = mongo.db[lang].find_one({u'type': u'display'})['value']
+        return "Not yet defined. (%s, %s)" % (name, exercise)
+
+# Do an exercise
+@app.route("/lang/<lang>/exercises/<exercise>/do")
+def do_exercise(lang, exercise):
+    if mongo.db[lang].count() == 0:
+        return redirect("/lang/%s" % (lang))
+    else:
+        name = mongo.db[lang].find_one({u'type': u'display'})['value']
+        return "Not yet defined. (%s, %s)" % (name, exercise)
