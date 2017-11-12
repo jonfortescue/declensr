@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script>
     /*
-    All the code is GPLv3 licensed on GitHub (https://github.com/jonfortescue/WV-ArticleStatus). This is for compatibility with LibreJS.
+    All the code is AGPLv3 licensed on GitHub (https://github.com/jonfortescue/declensr). This is for compatibility with LibreJS.
 
     @licstart  The following is the entire license notice for the
     JavaScript code in this page.
@@ -36,13 +36,13 @@
 </head>
 <body>
   <div class="container">
+    {{nav}}
     <div class="row center">
       <h1>Create Language: {{ title }}</h1>
     </div>
     <div class="row">
       <h3>This language currently is not implemented in the database. Please enter a grammar definition in the textbox below.</h3>
     </div>
-    {{nav}}
     <div class="row">
       <form method="POST">
         <div><textarea name="langDef" rows=30 style="width: 100%"></textarea></div>

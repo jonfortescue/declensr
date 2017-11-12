@@ -272,7 +272,8 @@ def add_exercises(lang):
     else:
         name = mongo.db[lang].find_one({u'type': u'display'})['value']
         if request.method =="GET":
-            return render_template("exercise-add-edit.html", title="%s: Add Exercises" % (name))
+            return render_template("exercise-add-edit.html", title="%s: Add Exercises" % (name), nav=nav_header([("Declensr", "/"),
+                                   (name, "/lang/" + lang), ("Exercises", "/lang/%s/exercises" % (lang)), ("Add Exercises", "/lang/%s/exercises/add" % (lang))]))
         elif request.method == "POST":
             data = request.form['exerciseSchema'].split('\n')
             prevIndent = 0
@@ -290,8 +291,24 @@ def add_exercises(lang):
                 assert len(breadcrumbs) > 0
                 exerciseName = breadcrumbs[0]
                 if indent == 0:
-                    exercises[exerciseName] = { 'namespace': 'exercise' }
+                    exercises[exerciseName] = { 'namespace': 'exercise', 'name': exerciseName }
+                    exercises[exerciseName]["Display"] = {}
                     parsop.append("NEW EXERCISE: " + exerciseName)
+                elif "Display" in breadcrumbs[1] and value == "":
+                    assert len(breadcrumbs) > 1
+                    assert re.match(r'Display(\d+)', breadcrumbs[1])
+                    displayIndex = re.match(r'Display(\d+)', breadcrumbs[1]).group(1)
+                    if indent == 1:
+                        exercises[exerciseName]["Display"][displayIndex] = {}
+                        parsop.append("NEW DISPLAY[%s]: %s" % (displayIndex, exerciseName))
+                    else:
+                        assert len(breadcrumbs) > 2
+                        displayTree = breadcrumbs[2:-1]
+                        currentNode = exercises[exerciseName]["Display"][displayIndex]
+                        for node in displayTree:
+                            currentNode = currentNode[node]
+                        currentNode[breadcrumbs[-1]] = {}
+                        parsop.append("DISPLAY NODE: Display[%s].%s.%s (%s)" % (displayIndex, '.'.join(displayTree), breadcrumbs[-1], exerciseName))
                 elif value != "":
                     if indent == 1:
                         assert len(breadcrumbs) > 1
@@ -299,17 +316,25 @@ def add_exercises(lang):
                         isArray =  re.match(r'(\w+)(\d+)', item)
                         if isArray:
                             item = isArray.group(1)
-                            index = int(isArray.group(2))
+                            index = isArray.group(2)
                             exercises[exerciseName][item] = {}
                             exercises[exerciseName][item][index] = value
-                            parsop.append("PROPERTY: %s[%d] of %s in %s" % (item, index, value, exerciseName))
+                            parsop.append("PROPERTY: %s[%s] of %s in %s" % (item, index, value, exerciseName))
                         else:
                             exercises[exerciseName][item] = value
                             parsop.append("PROPERTY: %s of %s in %s" % (item, value, exerciseName))
                     elif "Display" in breadcrumbs[1]:
-
+                        displayIndex =  re.match(r'Display(\d+)', breadcrumbs[1]).group(1)
+                        displayTree = breadcrumbs[2:-1]
+                        currentNode = exercises[exerciseName]["Display"][displayIndex]
+                        for node in displayTree:
+                            currentNode = currentNode[node]
+                        currentNode[breadcrumbs[-1]] = value
+                        parsop.append("DISPLAY NODE: Display[%s].%s.%s: %s (%s)" % (displayIndex, '.'.join(displayTree), breadcrumbs[-1], value, exerciseName))
 
                 prevIndent = indent
+            for exercise in exercises.keys():
+                mongo.db[lang].insert_one(exercises[exercise])
             return render_template("creation-report.html", title="%s Exercises Added" % (name), parsop='\n'.join(parsop), bcop='\n'.join(bcop))
 
 # Edit an exercise

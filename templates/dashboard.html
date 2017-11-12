@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script>
     /*
-    All the code is GPLv3 licensed on GitHub (https://github.com/jonfortescue/WV-ArticleStatus). This is for compatibility with LibreJS.
+    All the code is AGPLv3 licensed on GitHub (https://github.com/jonfortescue/declensr). This is for compatibility with LibreJS.
 
     @licstart  The following is the entire license notice for the
     JavaScript code in this page.
@@ -36,10 +36,10 @@
 </head>
 <body>
   <div class="container">
+    {{nav}}
     <div class="row center">
       <h1>{{ title }}</h1>
     </div>
-    {{nav}}
     <div class="row center">
       <a href="{{lang}}/vocab">Wordlist</a>&nbsp;&dot;&nbsp;<a href="{{ lang }}/vocab/add">Add Vocab</a>&nbsp;&dot;&nbsp;
       <a href="{{lang}}/exercises">Exercises</a>&nbsp;&dot;&nbsp;<a href="{{lang}}/exercises/add">Add Exercises</a>
