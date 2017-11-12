@@ -169,7 +169,17 @@ Noun:
           Accusative: {{0}}ούς
           Genitive: {{0}}ών
           Vocative: {{0}}οί
-      [KEY]el-nM-ος-οι-2a: *
+      [KEY]el-nM-ος-οι-2a:
+        Singular:
+          Nominative: {{0}}ος
+          Accusative: {{0}}ο
+          Genitive: {{0}}ου
+          Vocative: {{0}}ε
+        Plural:
+          Nominative: {{0}}οι
+          Accusative: {{0}}ους
+          Genitive: {{0}}ων
+          Vocative: {{0}}οι
       [KEY]el-nM-ος-οι-3a:
         Singular:
           Nominative: {{0}}ος
@@ -181,7 +191,12 @@ Noun:
           Accusative: {{0}}ους
           Genitive: {{0}}ων
           Vocative: {{0}}οι
-      [KEY]el-nM-ος-2a: *
+      [KEY]el-nM-ος-2a:
+        Singular:
+          Nominative: {{0}}ος
+          Accusative: {{0}}ο
+          Genitive: {{0}}ου
+          Vocative: {{0}}ε
       [KEY]el-nM-ος-3a:
         Singular:
           Nominative: {{0}}ος

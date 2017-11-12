@@ -28,15 +28,20 @@ def subpattern_exists(mylist, pattern):
 
 def extract_attributes(header, attributes, breadcrumbs):
     start = breadcrumbs.index(header)
-    itemName = breadcrumbs[start]
-    obj = breadcrumbs[0:start+1]
+    namespace = breadcrumbs[0:start+1]
     attributeValues = breadcrumbs[start + 1:len(breadcrumbs)]
+    for item in attributeValues:
+        if "[KEY]" in item:
+            assert len(item) > 5
+            itemName = item[5:]
     attributeList = []
     for attributeValue in attributeValues:
+        if attributeValue == "[KEY]%s" % (itemName):
+            continue
         for attribute in attributes:
-            if attributeValue in attribute[0] and subpattern_exists(obj, attribute[1]):
+            if attributeValue in attribute[0] and subpattern_exists(namespace, attribute[1]):
                 attributeList.append((attribute[2], attributeValue))
-    return (itemName, obj, attributeList)
+    return (itemName, namespace, attributeList)
 
 # index/home page
 @app.route("/")
@@ -112,7 +117,8 @@ def lang(lang):
                     parsop.append("SPECIAL:\t%s %s, attributes: %s" % (itemName, value, ', '.join(': '.join(x) for x in attributeList)))
                 elif "Type" in breadcrumbs:
                     assert len(breadcrumbs) >= TYPE_LEVEL
-                    # TODO: modify extract_attributes to accommodate attributes existing prior to the itemName declaration
+                    (itemName, obj, attributeList) = extract_attributes('Type', attributes, breadcrumbs)
+                    parsop.append("TYPE:\t\t%s %s, attributes: %s" % (itemName, value, ', '.join(': '.join(x) for x in attributeList)))
             prevIndent = indent
         return render_template("creation-report.html", title=display, parsop='\n'.join(parsop), bcop='\n'.join(bcop))
     else:
