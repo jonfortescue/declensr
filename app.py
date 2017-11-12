@@ -49,7 +49,7 @@ def home():
     return render_template("index.html", title="Which language are you studying?")
 
 # Language page
-@app.route("/lang/<lang>", methods=['GET', 'POST'])
+@app.route("/lang/<lang>", methods=['GET', 'POST', r'DELETE'])
 def lang(lang):
     # Default page access
     if request.method == 'GET':
@@ -59,12 +59,14 @@ def lang(lang):
         else:
             return "This language has definitions but this program isn't done."
     # If we're updating the grammar file via create.html, we handle that
+    elif request.method == r'DELETE':
+        mongo.db[lang].remove()
     elif request.method == 'POST':
         data = request.form['langDef'].split('\n')
         display = ""
         prevIndent = 0
+        numRules = 0
         breadcrumbs = list()
-        rules = list()
         attributes = list()
         bcop = list()
         parsop = list()
@@ -96,13 +98,16 @@ def lang(lang):
                 if key == "Language":
                     if value != lang:
                         return "This grammar (%s) is not for the selected language (%s)." % (value, lang)
+                    langdb = mongo.db[lang]
                 elif key == "Display":
                     display = value
+                    langdb.insert_one({ 'namespace': 'grammar', 'type': 'display', 'value': display })
                 elif "Rules" in breadcrumbs:
                     assert len(breadcrumbs) == RULES_LEVEL
-                    assert int(key) == len(rules)
-                    rules.append(value)
+                    assert int(key) == numRules
+                    numRules += 1
                     parsop.append("RULE %d: %s" % (int(key), value))
+                    langdb.insert_one({ 'namespace': 'grammar', 'type': 'rule', 'rule': value })
                 elif "Attribute" in breadcrumbs:
                     assert len(breadcrumbs) >= ATTRIBUTE_LEVEL
                     obj = breadcrumbs[0:len(breadcrumbs) - 2] # 2 = distance of "Attribute" from end of breadcrumbs
@@ -111,14 +116,23 @@ def lang(lang):
                     attribute = (possibleValues, obj, attributeName)
                     attributes.append(attribute)
                     parsop.append("ATTRIBUTE:\t%s.%s, values: %s" % ('.'.join(obj), attributeName, ', '.join(possibleValues)))
+                    langdb.insert_one({ 'namespace': 'grammar', 'type': 'attribute', 'name': attributeName, 'object': obj, 'values': possibleValues })
                 elif "Special" in breadcrumbs:
                     assert len(breadcrumbs) >= SPECIAL_LEVEL
                     (itemName, obj, attributeList) = extract_attributes('Special', attributes, breadcrumbs)
                     parsop.append("SPECIAL:\t%s %s, attributes: %s" % (itemName, value, ', '.join(': '.join(x) for x in attributeList)))
+                    dbvalue = { 'namespace': 'grammar', 'type': 'special', 'name': itemName, 'value': value }
+                    for attribute in attributeList:
+                        dbvalue[attribute[0]] = attribute[1]
+                    langdb.insert_one(dbvalue)
                 elif "Type" in breadcrumbs:
                     assert len(breadcrumbs) >= TYPE_LEVEL
                     (itemName, obj, attributeList) = extract_attributes('Type', attributes, breadcrumbs)
                     parsop.append("TYPE:\t\t%s %s, attributes: %s" % (itemName, value, ', '.join(': '.join(x) for x in attributeList)))
+                    dbvalue = { 'namespace': 'grammar', 'type': 'type', 'name': itemName, 'value': value }
+                    for attribute in attributeList:
+                        dbvalue[attribute[0]] = attribute[1]
+                    langdb.insert_one(dbvalue)
             prevIndent = indent
         return render_template("creation-report.html", title=display, parsop='\n'.join(parsop), bcop='\n'.join(bcop))
     else:
