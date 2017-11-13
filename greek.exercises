@@ -2,7 +2,7 @@ Noun Declensions:
   Namespace: Noun
   Item0: Vocab
   Display0:
-    Heading-1: {{0|stems|vocab|_id|Number.Singular,Case.Nominative|}}{{0|value|Noun.Type|type|Number.Singular,Case.Nominative|}} Declensions
+    Heading-1: {{0|Stem|vocab|_id|Number.Singular,Case.Nominative|}}{{0|value|Noun.Type|type|Number.Singular,Case.Nominative|}} Declensions
     Heading-2: {{0|Gender|Noun.Type|type||}}
     Table:
       Table-Group{{Draw-If-Exists Singular}}:

@@ -157,7 +157,7 @@ def parse_grammar(lang, data, create=True):
     return render_template("creation-report.html", title=display, parsop='\n'.join(parsop), bcop='\n'.join(bcop),
                            nav=nav_header([("Declensr", "/"), (display, "/lang/" + lang), ("Creation Report", "/")]))
 
-def render_html_from_schema(schema, tabs, exercise, preview, words=None):
+def render_html_from_schema(lang, schema, tabs, exercise, preview, words=None):
     html = ""
     keys = list(schema.keys())
     # NOTE: this assumes that arrayed-items are going to be the only items at that level
@@ -204,11 +204,11 @@ def render_html_from_schema(schema, tabs, exercise, preview, words=None):
 
         if type(schema[key]) is not dict:
             if words is not None:
-                html += parse_exercise_code(schema[key], exercise, preview, words)
+                html += parse_exercise_code(lang, schema[key], exercise, preview, words)
             else:
                 html += schema[key]
         else:
-            html += render_html_from_schema(schema[key], tabs + "\t", exercise, words)
+            html += render_html_from_schema(lang, schema[key], tabs + "\t", exercise, words)
 
         if keySafe == "Heading-1":
             html += "</h1>"
@@ -231,14 +231,15 @@ def render_html_from_schema(schema, tabs, exercise, preview, words=None):
         html += "\n"
     return html
 
-def parse_exercise_code(fullCode, exercise, preview, words):
+def parse_exercise_code(lang, fullCode, exercise, preview, words):
     codes = re.findall(r'(\{\{[\w\d\s\-_|,.]+\}\})', fullCode)
+    items = exercise['Item']
     parsedList = []
     for code in codes:
         parsed = ""
         code = code[2:-2]
         codePoints = code.split('|')
-        index = 0
+        index = ''
         poi = ''
         namespace = ''
         searchby = ''
@@ -247,7 +248,7 @@ def parse_exercise_code(fullCode, exercise, preview, words):
         i = 0
         for codePoint in codePoints:
             if i == 0:
-                index = int(codePoint)
+                index = codePoint
             elif i == 1:
                 poi = codePoint
             elif i == 2:
@@ -259,12 +260,21 @@ def parse_exercise_code(fullCode, exercise, preview, words):
                     atts = codePoint.split(',')
                     for att in atts:
                         at = att.split('.')
-                        attributes.append((at[0], at1))
+                        attributes.append((at[0], at[1]))
             elif i == 5:
                 if codePoint != "":
                     generated = codePoint.split(',')
-
-
+            i += 1
+        item = items[index].lower()
+        if item == "vocab":
+            if poi == "Stem":
+                searchDict = {u'name': words['type']}
+                for attribute in attributes:
+                    searchDict[attribute[0]] = attribute[1]
+                stemCode = unicode(mongo.db[lang].find_one(searchDict)['value'])
+                parsedList.append(stemCode)
+    for item in parsedList:
+        fullCode = re.sub(r'(\{\{[\w\d\s\-_|,.]+\}\})', item, fullCode, 1)
     return fullCode
 
 # index/home page
@@ -490,7 +500,7 @@ def preview_exercise_generic(lang, exercise_id, vocab_id=None):
         for displayKey in exercise['Display'].keys():
             currentDisplay = exercise['Display'][displayKey]
             tabs = ""
-            displays[displayKey] = Markup(render_html_from_schema(currentDisplay, tabs, exercise, True, word))
+            displays[displayKey] = Markup(render_html_from_schema(lang, currentDisplay, tabs, exercise, True, word))
         return render_template("exercise-preview.html", title="Greek Exercise: " + exercise['name'], displays=displays,
                                 wordlist=wordlist, get_default_word=get_default_word)
 
