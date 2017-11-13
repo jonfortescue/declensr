@@ -39,6 +39,16 @@
     <div class="row center">
       <h1>{{ title }}</h1>
     </div>
+    <div class="row center">
+      <form method="POST">
+        <select name="vocabid">
+          {% for word in wordlist %}
+          <option value="{{word[1]}}">{{ word[0] }}</option>
+          {% endfor %}
+        </select>
+        <input type="submit" value="Check">
+      </form>
+    </div>
     {% for html in displays.keys() %}
     {{displays[html]}}
     {% endfor %}

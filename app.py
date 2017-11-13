@@ -54,27 +54,6 @@ def extract_attributes(header, attributes, breadcrumbs):
                 attributeList.append((attribute[2], attributeValue))
     return (itemName, namespace, attributeList)
 
-def vocab_add_edit_generic_get(lang):
-    name = mongo.db[lang].find_one({u'type': u'display'})['value']
-    typesFromDb = mongo.db[lang].find({u'namespace': u'grammar', u'type': u'type'})
-    types = []
-    numStemsForType = {}
-    for typ in typesFromDb:
-        types.append(typ['name'])
-    types = list(set(types))
-    types.sort()
-    maxStemNum = 0
-    for typ in types:
-        numStemsForType[typ] = number_stems_in_type(mongo.db[lang], typ)
-        if numStemsForType[typ] > maxStemNum:
-            maxStemNum = numStemsForType[typ]
-    return (name, types, numStemsForType, maxStemNum)
-
-def vocab_add_edit_generic_post(lang):
-    vocabType = request.form['type']
-    stems = request.form.getlist('stemBox')[0:number_stems_in_type(mongo.db[lang], vocabType)]
-    return (vocabType, stems)
-
 def number_stems_in_type(db, typeName):
     types = db.find({u'namespace': 'grammar', u'name': typeName})
     maxStemNum = 0
@@ -91,6 +70,10 @@ def number_stems_in_type(db, typeName):
 def get_default_word(db, stem, typeName):
     ending = re.sub(r'\{\{\d+\}\}', '', db.find_one({u'namespace': u'grammar', u'name': typeName})['value'])
     return stem + ending
+
+def get_class_from_type(db, typ):
+    typeDB = db.find_one({u'name': typ})
+    return typeDB['object']
 
 def construct_breadcrumbs(line, prevIndent, breadcrumbs):
     pair = re.split(r':\s*', line)
@@ -114,9 +97,74 @@ def construct_breadcrumbs(line, prevIndent, breadcrumbs):
 
     return (indent, key, value)
 
-def render_html_from_schema(schema, tabs):
+def parse_grammar(lang, data, create=True):
+    display = ""
+    prevIndent = 0
+    numRules = 0
+    breadcrumbs = list()
+    attributes = list()
+    bcop = list()
+    parsop = list()
+    for line in data:
+        if line.strip() == "":
+            continue
+        (indent, key, value) = construct_breadcrumbs(line, prevIndent, breadcrumbs)
+
+        bcop.append(' -> '.join(breadcrumbs) + (' *' if value != "" else ''))
+
+        if value != "":
+            if key == "Language":
+                if value != lang:
+                    return "This grammar (%s) is not for the selected language (%s)." % (value, lang)
+                langdb = mongo.db[lang]
+            elif key == "Display":
+                display = value
+                langdb.insert_one({ 'namespace': 'grammar', 'type': 'display', 'value': display })
+                if create:
+                    mongo.db.lang.insert_one({'lang': lang, 'name': display})
+            elif "Rules" in breadcrumbs:
+                assert len(breadcrumbs) == RULES_LEVEL
+                assert int(key) == numRules
+                numRules += 1
+                parsop.append("RULE %d: %s" % (int(key), value))
+                langdb.insert_one({ 'namespace': 'grammar', 'type': 'rule', 'rule': value })
+            elif "Attribute" in breadcrumbs:
+                assert len(breadcrumbs) >= ATTRIBUTE_LEVEL
+                obj = breadcrumbs[0:len(breadcrumbs) - 2] # 2 = distance of "Attribute" from end of breadcrumbs
+                attributeName = key
+                possibleValues = re.split(r',\s*', value)
+                attribute = (possibleValues, obj, attributeName)
+                attributes.append(attribute)
+                parsop.append("ATTRIBUTE:\t%s.%s, values: %s" % ('.'.join(obj), attributeName, ', '.join(possibleValues)))
+                langdb.insert_one({ 'namespace': 'grammar', 'type': 'attribute', 'name': attributeName, 'object': obj, 'values': possibleValues })
+            elif "Special" in breadcrumbs:
+                assert len(breadcrumbs) >= SPECIAL_LEVEL
+                (itemName, obj, attributeList) = extract_attributes('Special', attributes, breadcrumbs)
+                parsop.append("SPECIAL:\t%s %s, attributes: %s" % (itemName, value, ', '.join(': '.join(x) for x in attributeList)))
+                dbvalue = { 'namespace': 'grammar', 'type': 'special', 'object': obj, 'name': itemName, 'value': value }
+                for attribute in attributeList:
+                    dbvalue[attribute[0]] = attribute[1]
+                langdb.insert_one(dbvalue)
+            elif "Type" in breadcrumbs:
+                assert len(breadcrumbs) >= TYPE_LEVEL
+                (itemName, obj, attributeList) = extract_attributes('Type', attributes, breadcrumbs)
+                parsop.append("TYPE:\t\t%s %s, attributes: %s" % (itemName, value, ', '.join(': '.join(x) for x in attributeList)))
+                dbvalue = { 'namespace': 'grammar', 'type': 'type', 'object': obj, 'name': itemName, 'value': value }
+                for attribute in attributeList:
+                    dbvalue[attribute[0]] = attribute[1]
+                langdb.insert_one(dbvalue)
+        prevIndent = indent
+    return render_template("creation-report.html", title=display, parsop='\n'.join(parsop), bcop='\n'.join(bcop),
+                           nav=nav_header([("Declensr", "/"), (display, "/lang/" + lang), ("Creation Report", "/")]))
+
+def render_html_from_schema(schema, tabs, exercise, preview, words=None):
     html = ""
-    for key in schema.keys():
+    keys = list(schema.keys())
+    # NOTE: this assumes that arrayed-items are going to be the only items at that level
+    #       this is possibly a dangerous assumption and may need to be changed in the future
+    if "[" in keys[0]:
+        keys.sort(key=lambda x: x[x.index('[')+1:x.index(']')])
+    for key in keys:
         html += "\n"
         keyFormat = re.match(r'([\w-]+)(\[\d+\])?(\{\{[\w\s-]+\}\})?', key)
         keySafe = keyFormat.group(1)
@@ -131,6 +179,9 @@ def render_html_from_schema(schema, tabs):
 
             if command == "Span":
                 attribute = " colspan=4"
+            if command == "Draw-If-Exists" and words is not None:
+                if argument not in words['attributes']:
+                    continue;
 
         if keySafe == "Heading-1":
             html += "%s<h1%s>" % (tabs, attribute)
@@ -152,9 +203,12 @@ def render_html_from_schema(schema, tabs):
             html += "%s<td%s>" % (tabs, attribute)
 
         if type(schema[key]) is not dict:
-            html += schema[key]
+            if words is not None:
+                html += parse_exercise_code(schema[key], exercise, preview, words)
+            else:
+                html += schema[key]
         else:
-            html += render_html_from_schema(schema[key], tabs + "\t")
+            html += render_html_from_schema(schema[key], tabs + "\t", exercise, words)
 
         if keySafe == "Heading-1":
             html += "</h1>"
@@ -177,6 +231,42 @@ def render_html_from_schema(schema, tabs):
         html += "\n"
     return html
 
+def parse_exercise_code(fullCode, exercise, preview, words):
+    codes = re.findall(r'(\{\{[\w\d\s\-_|,.]+\}\})', fullCode)
+    parsedList = []
+    for code in codes:
+        parsed = ""
+        code = code[2:-2]
+        codePoints = code.split('|')
+        index = 0
+        poi = ''
+        namespace = ''
+        searchby = ''
+        attributes = []
+        generated = []
+        i = 0
+        for codePoint in codePoints:
+            if i == 0:
+                index = int(codePoint)
+            elif i == 1:
+                poi = codePoint
+            elif i == 2:
+                namespace = codePoint
+            elif i == 3:
+                searchby = codePoint
+            elif i == 4:
+                if codePoint != "":
+                    atts = codePoint.split(',')
+                    for att in atts:
+                        at = att.split('.')
+                        attributes.append((at[0], at1))
+            elif i == 5:
+                if codePoint != "":
+                    generated = codePoint.split(',')
+
+
+    return fullCode
+
 # index/home page
 @app.route("/")
 def home():
@@ -191,7 +281,9 @@ def lang(lang):
     if request.method == 'GET':
         # If the language hasn't been defined in the database, it needs to be created
         if mongo.db[lang].count() == 0:
-            return render_template("create.html", title=lang, nav=nav_header([("Declensr", "/"), ("Create " + lang, "/lang/" + lang)]))
+            return render_template("create.html", title="Create Grammar: " + lang, desc="This language currently is not implemented in " +
+                                    "the database. Please enter a grammar definition in the textbox below.",
+                                    nav=nav_header([("Declensr", "/"), ("Create " + lang, "/lang/" + lang)]))
         else:
             display = mongo.db[lang].find_one({u'type': u'display'})['value']
             return render_template("dashboard.html", lang=lang, title="%s Dashboard" % (display),
@@ -203,66 +295,21 @@ def lang(lang):
         return "Language deleted."
     # If we're updating the grammar file via create.html, we handle that
     elif request.method == 'POST':
-        data = request.form['langDef'].split('\n')
-        display = ""
-        prevIndent = 0
-        numRules = 0
-        breadcrumbs = list()
-        attributes = list()
-        bcop = list()
-        parsop = list()
-        for line in data:
-            if line.strip() == "":
-                continue
-            (indent, key, value) = construct_breadcrumbs(line, prevIndent, breadcrumbs)
-
-            bcop.append(' -> '.join(breadcrumbs) + (' *' if value != "" else ''))
-
-            if value != "":
-                if key == "Language":
-                    if value != lang:
-                        return "This grammar (%s) is not for the selected language (%s)." % (value, lang)
-                    langdb = mongo.db[lang]
-                elif key == "Display":
-                    display = value
-                    langdb.insert_one({ 'namespace': 'grammar', 'type': 'display', 'value': display })
-                    mongo.db.lang.insert_one({'lang': lang, 'name': display})
-                elif "Rules" in breadcrumbs:
-                    assert len(breadcrumbs) == RULES_LEVEL
-                    assert int(key) == numRules
-                    numRules += 1
-                    parsop.append("RULE %d: %s" % (int(key), value))
-                    langdb.insert_one({ 'namespace': 'grammar', 'type': 'rule', 'rule': value })
-                elif "Attribute" in breadcrumbs:
-                    assert len(breadcrumbs) >= ATTRIBUTE_LEVEL
-                    obj = breadcrumbs[0:len(breadcrumbs) - 2] # 2 = distance of "Attribute" from end of breadcrumbs
-                    attributeName = key
-                    possibleValues = re.split(r',\s*', value)
-                    attribute = (possibleValues, obj, attributeName)
-                    attributes.append(attribute)
-                    parsop.append("ATTRIBUTE:\t%s.%s, values: %s" % ('.'.join(obj), attributeName, ', '.join(possibleValues)))
-                    langdb.insert_one({ 'namespace': 'grammar', 'type': 'attribute', 'name': attributeName, 'object': obj, 'values': possibleValues })
-                elif "Special" in breadcrumbs:
-                    assert len(breadcrumbs) >= SPECIAL_LEVEL
-                    (itemName, obj, attributeList) = extract_attributes('Special', attributes, breadcrumbs)
-                    parsop.append("SPECIAL:\t%s %s, attributes: %s" % (itemName, value, ', '.join(': '.join(x) for x in attributeList)))
-                    dbvalue = { 'namespace': 'grammar', 'type': 'special', 'name': itemName, 'value': value }
-                    for attribute in attributeList:
-                        dbvalue[attribute[0]] = attribute[1]
-                    langdb.insert_one(dbvalue)
-                elif "Type" in breadcrumbs:
-                    assert len(breadcrumbs) >= TYPE_LEVEL
-                    (itemName, obj, attributeList) = extract_attributes('Type', attributes, breadcrumbs)
-                    parsop.append("TYPE:\t\t%s %s, attributes: %s" % (itemName, value, ', '.join(': '.join(x) for x in attributeList)))
-                    dbvalue = { 'namespace': 'grammar', 'type': 'type', 'name': itemName, 'value': value }
-                    for attribute in attributeList:
-                        dbvalue[attribute[0]] = attribute[1]
-                    langdb.insert_one(dbvalue)
-            prevIndent = indent
-        return render_template("creation-report.html", title=display, parsop='\n'.join(parsop), bcop='\n'.join(bcop),
-                               nav=nav_header([("Declensr", "/"), (display, "/lang/" + lang), ("Creation Report", "/")]))
+        return parse_grammar(lang, request.form['langDef'].split('\n'))
     else:
         return "HTTP 405 Method Not Allowed"
+
+# Edit grammar
+@app.route("/lang/<lang>/edit", methods=['GET', 'POST'])
+def edit_grammar(lang):
+    if request.method == "GET":
+        name = mongo.db[lang].find_one({u'type': u'display'})['value']
+        return render_template("create.html", title="Editing " + name, desc="Edit the grammar for the %s language to correct any errors. " % (name)
+                                + "Your wordlists and exercises will be preserved.",
+                                nav=nav_header([("Declensr", "/"), ("Editing " + name, "/lang/%s/edit" % (lang))]))
+    elif request.method == "POST":
+        mongo.db[lang].remove({ u'namespace': u'grammar' })
+        return parse_grammar(lang, request.form['langDef'].split('\n'), False)
 
 # Vocab dashboard
 @app.route("/lang/<lang>/vocab")
@@ -277,6 +324,27 @@ def vocab(lang):
         return render_template("vocab.html", title="%s Vocab List" % (name), vocab=vocab,
                                nav=nav_header([("Declensr", "/"), (name, "/lang/" + lang), ("Vocab", "/lang/%s/vocab" % (lang))]))
 
+def vocab_add_edit_generic_get(lang):
+    name = mongo.db[lang].find_one({u'type': u'display'})['value']
+    typesFromDb = mongo.db[lang].find({u'namespace': u'grammar', u'type': u'type'})
+    types = []
+    numStemsForType = {}
+    for typ in typesFromDb:
+        types.append(typ['name'])
+    types = list(set(types))
+    types.sort()
+    maxStemNum = 0
+    for typ in types:
+        numStemsForType[typ] = number_stems_in_type(mongo.db[lang], typ)
+        if numStemsForType[typ] > maxStemNum:
+            maxStemNum = numStemsForType[typ]
+    return (name, types, numStemsForType, maxStemNum)
+
+def vocab_add_edit_generic_post(lang):
+    vocabType = request.form['type']
+    stems = request.form.getlist('stemBox')[0:number_stems_in_type(mongo.db[lang], vocabType)]
+    return (vocabType, stems)
+
 # Add vocab
 @app.route("/lang/<lang>/vocab/add", methods=["GET", "POST"])
 def add_vocab(lang):
@@ -290,7 +358,7 @@ def add_vocab(lang):
                                    ("Vocab", "/lang/%s/vocab" % (lang)), ("Add Word", "/lang/%s/vocab/add" % (lang))]))
         elif request.method == "POST":
             (vocabType, stems) = vocab_add_edit_generic_post(lang)
-            mongo.db[lang].insert_one({ u'namespace': 'vocab', u'type': vocabType, u'stems': stems })
+            mongo.db[lang].insert_one({ u'namespace': 'vocab', u'type': vocabType, u'stems': stems, u'obj': get_class_from_type(mongo.db[lang], vocabType) })
             return redirect("/lang/%s/vocab/add" % (lang))
         else:
             return "HTTP 405 Method Not Allowed"
@@ -310,7 +378,7 @@ def edit_vocab(lang, vocabid):
                                    ("Vocab", "/lang/%s/vocab" % (lang)), ("Editing " + word_display, "/lang/%s/vocab/%s" % (lang, vocabid))]))
         elif request.method == "POST":
             (vocabType, stems) = vocab_add_edit_generic_post(lang)
-            mongo.db[lang].update_one({ u'_id': ObjectId(vocabid) }, { '$set': { u'type': vocabType, u'stems': stems } })
+            mongo.db[lang].update_one({ u'_id': ObjectId(vocabid) }, { '$set': { u'type': vocabType, u'stems': stems, u'obj': get_class_from_type(mongo.db[lang], vocabType) } })
             return redirect("/lang/%s/vocab/%s" % (lang, vocabid))
         elif request.method == r"DELETE":
             mongo.db[lang].remove_one({ u'_id': ObjectId(vocabid) })
@@ -404,20 +472,41 @@ def add_exercises(lang):
                 mongo.db[lang].insert_one(exercises[exercise])
             return render_template("creation-report.html", title="%s Exercises Added" % (name), parsop='\n'.join(parsop), bcop='\n'.join(bcop))
 
-# Preview an exercise
-@app.route("/lang/<lang>/exercises/<exercise_id>")
-def preview_exercise(lang, exercise_id):
+def preview_exercise_generic(lang, exercise_id, vocab_id=None):
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
         name = mongo.db[lang].find_one({u'type': u'display'})['value']
         exercise = mongo.db[lang].find_one({ u'_id': ObjectId(exercise_id) })
+        wordlistDB = mongo.db[lang].find({ u'namespace': 'vocab', u'obj': exercise['Namespace'] })
+        wordlist = list()
+        for word in wordlistDB:
+            wordlist.append((get_default_word(mongo.db[lang], word['stems'][0], word['type']), word['_id']))
+        if vocab_id is not None:
+            word = mongo.db[lang].find_one({ u'_id': ObjectId(vocab_id) })
+        else:
+            word = None
         displays = {}
         for displayKey in exercise['Display'].keys():
             currentDisplay = exercise['Display'][displayKey]
             tabs = ""
-            displays[displayKey] = Markup(render_html_from_schema(currentDisplay, tabs))
-        return render_template("exercise-preview.html", title="Greek Exercise: " + exercise['name'], displays=displays)
+            displays[displayKey] = Markup(render_html_from_schema(currentDisplay, tabs, exercise, True, word))
+        return render_template("exercise-preview.html", title="Greek Exercise: " + exercise['name'], displays=displays,
+                                wordlist=wordlist, get_default_word=get_default_word)
+
+# Preview an exercise
+@app.route("/lang/<lang>/exercises/<exercise_id>", methods=["GET", "POST"])
+def preview_exercise(lang, exercise_id):
+    if request.method == "GET":
+        return preview_exercise_generic(lang, exercise_id)
+    elif request.method == "POST":
+        vocab_id = request.form['vocabid']
+        return redirect("/lang/%s/exercises/%s/%s" % (lang, exercise_id, vocab_id))
+
+# Preview an exercise with a specific word
+@app.route("/lang/<lang>/exercises/<exercise_id>/<vocab_id>")
+def preview_exercise_with_word(lang, exercise_id, vocab_id):
+    return preview_exercise_generic(lang, exercise_id, vocab_id)
 
 # Edit an exercise
 @app.route("/lang/<lang>/exercises/<exercise>/edit")

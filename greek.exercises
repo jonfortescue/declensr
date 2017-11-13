@@ -2,7 +2,7 @@ Noun Declensions:
   Namespace: Noun
   Item0: Vocab
   Display0:
-    Heading-1: {{0|Stem|Vocab|_id|Singular,Nominative|}}{{0|value|Noun.Type|type|Singular,Nominative|}} Declensions
+    Heading-1: {{0|stems|vocab|_id|Number.Singular,Case.Nominative|}}{{0|value|Noun.Type|type|Number.Singular,Case.Nominative|}} Declensions
     Heading-2: {{0|Gender|Noun.Type|type||}}
     Table:
       Table-Group{{Draw-If-Exists Singular}}:
@@ -14,10 +14,10 @@ Noun Declensions:
           Table-Heading[2]: Genitive
           Table-Heading[3]: Vocative
         Row[2]:
-          Cell[0]: {{0|Stem|Vocab|_id|Singular,Nominative|}}{{0|Input|Noun.Type|type|Singular,Nominative|}}
-          Cell[1]: {{0|Stem|Vocab|_id|Singular,Accusative|}}{{0|Input|Noun.Type|type|Singular,Accusative|}}
-          Cell[2]: {{0|Stem|Vocab|_id|Singular,Genitive|}}{{0|Input|Noun.Type|type|Singular,Genitive|}}
-          Cell[3]: {{0|Stem|Vocab|_id|Singular,Vocative|}}{{0|Input|Noun.Type|type|Singular,Vocative|}}
+          Cell[0]: {{0|Stem|Vocab|_id|Number.Singular,Case.Nominative|}}{{0|Input|Noun.Type|type|Number.Singular,Case.Nominative|}}
+          Cell[1]: {{0|Stem|Vocab|_id|Number.Singular,Case.Accusative|}}{{0|Input|Noun.Type|type|Number.Singular,Case.Accusative|}}
+          Cell[2]: {{0|Stem|Vocab|_id|Number.Singular,Case.Genitive|}}{{0|Input|Noun.Type|type|Number.Singular,Case.Genitive|}}
+          Cell[3]: {{0|Stem|Vocab|_id|Number.Singular,Case.Vocative|}}{{0|Input|Noun.Type|type|Number.Singular,Case.Vocative|}}
       Table-Group{{Draw-If-Exists Plural}}:
         Row[0]:
           Table-Heading{{Span 4}}: Plural
@@ -27,10 +27,10 @@ Noun Declensions:
           Table-Heading[2]: Genitive
           Table-Heading[3]: Vocative
         Row[2]:
-          Cell[0]: {{0|Stem|Vocab|_id|Plural,Nominative|}}{{0|Input|Noun.Type|type|Plural,Nominative|}}
-          Cell[1]: {{0|Stem|Vocab|_id|,Accusative|}}{{0|Input|Noun.Type|type|Plural,Nominative|}}
-          Cell[2]: {{0|Stem|Vocab|_id|Plural,Genitive|}}{{0|Input|Noun.Type|type|Plural,Nominative|}}
-          Cell[3]: {{0|Stem|Vocab|_id|Plural,Vocative|}}{{0|Input|Noun.Type|type|Plural,Nominative|}}
+          Cell[0]: {{0|Stem|Vocab|_id|Number.Plural,Case.Nominative|}}{{0|Input|Noun.Type|type|Number.Plural,Case.Nominative|}}
+          Cell[1]: {{0|Stem|Vocab|_id|Number.Plural,Case.Accusative|}}{{0|Input|Noun.Type|type|Number.Plural,Case.Nominative|}}
+          Cell[2]: {{0|Stem|Vocab|_id|Number.Plural,Case.Genitive|}}{{0|Input|Noun.Type|type|Number.Plural,Case.Nominative|}}
+          Cell[3]: {{0|Stem|Vocab|_id|Number.Plural,Case.Vocative|}}{{0|Input|Noun.Type|type|Number.Plural,Case.Nominative|}}
 
 Noun Declensions with Articles:
   Namespace: Noun
@@ -39,7 +39,7 @@ Noun Declensions with Articles:
   Generate1: Case
   Display0:
     Heading-1: Definite Article
-    Heading-2: {{0|Input|Noun.Special.Definite Article|Gender||Number,Case}} {{0|Stem|Vocab|_id||Number,Case}}{{0|Input|Noun.Type|type|Singular,Nominative|}}
+    Heading-2: {{0|Input|Noun.Special.Definite Article|Gender||Number,Case}} {{0|Stem|Vocab|_id||Number,Case}}{{0|Input|Noun.Type|type||Number,Case}}
   Display1:
     Heading-1: Indefinite Article
-    Heading-2: {{0|Input|Noun.Special.Indefinite Article|Gender||Number,Case}} {{0|Stem|Vocab|_id||Number,Case}}{{0|Input|Noun.Type|type|Singular,Nominative|}}
+    Heading-2: {{0|Input|Noun.Special.Indefinite Article|Gender||Number,Case}} {{0|Stem|Vocab|_id||Number,Case}}{{0|Input|Noun.Type|type||Number,Case
