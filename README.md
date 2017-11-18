@@ -10,7 +10,7 @@ Declensr depends on:
 * [PyMongo](https://api.mongodb.com/python/current/)
 * [Flask_PyMongo](https://github.com/dcrosta/flask-pymongo)
 
-It is also recommended, as per standard Python development practices, that you use `virtualenv` while developing.
+It is also recommended (per standard Python development practices) that you use `virtualenv` while developing.
 
 ## Getting started
 To build Declensr:
@@ -20,17 +20,17 @@ To build Declensr:
 4. On Unix-based systems, run `source bin/activate` to enter the virtualenv. On Windows, run `Scripts\activate`
 5. Install the dependencies with pip. They will all be automatically installed if you run `pip flask_pymongo`.
 6. In a separate terminal, navigate to the `mongod` executable and run it
-7. In the original terminal, set your environment variables. On Unix-based systems, run `export FLASK_APP=app.py`, while on Windows run `set FLASK_APP=app.py`. If you would like debugging to be enable, run `export/set FLASK_DEBUG=1`, depending on your platform.
+7. In the original terminal, set your environment variables. On Unix-based systems, run `export FLASK_APP=app.py`, while on Windows run `set FLASK_APP=app.py`. If you would like debugging to be enabled, run `export FLASK_DEBUG=1` or `set FLASK_DEBUG=1`, depending on your platform.
 8. Run the application with the command `flask run --host=0.0.0.0`. Navigate to the web app at http://localhost:5000.
 
 ## Ways you can contribute
 Declensr is completely FOSS and designed to be highly extensible. If you want to use Declensr to study a language that has not been implemented yet, you will need to do some legwork to get it working. If you do this, please open a pull request to the main repo so everyone else can enjoy that language as well!
 
 ### Creating new wordlists
-In the future, Declensr will be able to auto-generate wordlists from Wiktionary. In the meantime, manual entry of wordlists is greatly appreciated!
+In the future, Declensr will be able to auto-generate wordlists from Wiktionary. In the meantime, manual entry of vocabulary is greatly appreciated!
 
 ### Creating new exercises
-If grammars are Declensr's skeleton, the exercises are its organs. Exercises make Declensr worth using, and we can never have enough. If you think of an exercise useful to you, Declensr makes it easy to implement that exercise. Once you've done that, make a pull request and share it with everyone!
+If grammars are Declensr's skeleton, then exercises are its organs. Exercises make Declensr worth using, and we can never have enough. If you think of an exercise useful to you, Declensr makes it easy to implement that exercise. Once you've done that, make a pull request and share it with everyone!
 
 **TODO: Documentation for Exercises**
 
@@ -73,7 +73,7 @@ Rules:
 Rule 0 tells us to use the item at index `1` if the given regular expression returns a match, which effectively means that the **Singular, Masculine, Accusative Definite Article** is **τον** when it precedes a vowel or one of a few consonants/double consonants and **το** otherwise. *Rules* are always defined at the beginning of the grammar and can be used on any value. Currently, *Rules* can either match a regular expression or a grammar *Class*.
 
 #### More on Attributes
-Attributes can be defined anywhere in the structure. In the above example, they define the *Noun* Class. However, a subtype of *Noun*, the *Pronoun*, needs additional specific attributes. Thus, we can define it as follows:
+Attributes can be defined anywhere in the structure. In the above example, they apply to the *Noun* Class. However, a subtype of *Noun*, the *Pronoun*, needs additional specific attributes. Thus, we can define it as follows:
 ```
 Noun: ...
   Special: ...
@@ -141,6 +141,6 @@ can have multiple stems. In this case, **Nominative**, **Accusative** **Singular
 These formats are based on [Wiktionary](https://en.wiktionary.org/)'s inflection templates (see [here](https://en.wiktionary.org/wiki/Template:el-nM-%CE%BF%CF%82-%CE%BF%CE%B9-3b) for an example). It is highly recommended that you use Wiktionary as a source for your own grammars, as they are extremely thorough in defining their templates. There are collections of these templates for easy reference; see [here](https://en.wiktionary.org/wiki/Wiktionary:Greek_noun_inflection-table_templates) for the Greek noun example.
 
 ### Implementing new functionality
-Some languages will not fit into the grammar framework currently provided by Declensr. For these languages, you will have to implement new grammar syntaxes and add code to parse them. If you don't know Python, try the crash course over at Codecademy for a brief intro and take a look at the Flask and PyMongo documentation if anything is confusing you. If you already know Python, just [take a look](https://github.com/jonfortescue/declensr/blob/master/app.py#L119) at the core code for grammar parsing and add your syntax in. **Please, avoid changing any existing sytnax parsing outside of bugfixes.** Changing the existing syntax will break the existing grammars. Instead, simply add on new functionality that doesn't affect the old logic.
+Some languages will not fit into the grammar framework currently provided by Declensr. For these languages, you will have to implement new grammar syntaxes and add code to parse them. If you don't know Python, try the crash course over at Codecademy for a brief intro and take a look at the Flask and PyMongo documentation if anything is confusing you. If you already know Python, just [take a look](https://github.com/jonfortescue/declensr/blob/master/app.py#L105) at the core code for grammar parsing and add your syntax in. **Please, avoid changing any existing sytnax parsing outside of bugfixes.** Changing the existing syntax will break the existing grammars. Instead, simply add on new functionality that doesn't affect the old logic.
 
 If you don't know how to program or don't have the time to implement the new functionality, please [open an issue](https://github.com/jonfortescue/declensr/issues) and tag it "request: functionality." Mention the language you're trying to add and briefly describe the functionality you need in order to properly add that language.
