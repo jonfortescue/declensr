@@ -4,6 +4,7 @@ from flask_pymongo import PyMongo
 import sys
 import re
 from bson.objectid import ObjectId
+from random import randint
 
 # without this, encoding issues cause errors
 reload(sys)
@@ -208,7 +209,7 @@ def render_html_from_schema(lang, schema, tabs, exercise, preview, words=None):
             else:
                 html += schema[key]
         else:
-            html += render_html_from_schema(lang, schema[key], tabs + "\t", exercise, words)
+            html += render_html_from_schema(lang, schema[key], tabs + "\t", exercise, preview, words)
 
         if keySafe == "Heading-1":
             html += "</h1>"
@@ -232,49 +233,72 @@ def render_html_from_schema(lang, schema, tabs, exercise, preview, words=None):
     return html
 
 def parse_exercise_code(lang, fullCode, exercise, preview, words):
-    codes = re.findall(r'(\{\{[\w\d\s\-_|,.]+\}\})', fullCode)
+    codes = re.findall(r'(\{\{.+\}\})', fullCode)
     items = exercise['Item']
     parsedList = []
     for code in codes:
         parsed = ""
         code = code[2:-2]
         codePoints = code.split('|')
-        index = ''
-        poi = ''
-        namespace = ''
-        searchby = ''
-        attributes = []
-        generated = []
+        html_item = ''
+        html_attributes = ''
+        itemIndex = ''
+        dbQuery = {}
+        dbAttributes = []
+        returnValue = ''
         i = 0
         for codePoint in codePoints:
             if i == 0:
-                index = codePoint
+                if '[' in codePoint and ']' in codePoint:
+                    html_item = codePoint[:codePoint.index('[')]
+                    html_attributes = ' ' + codePoint[codePoint.index('[')+1:-1]
+                else:
+                    html_item = codePoint
             elif i == 1:
-                poi = codePoint
+                itemIndex = codePoint
             elif i == 2:
-                namespace = codePoint
+                opts = codePoint.split(',')
+                for opt in opts:
+                    vals = opt.split('=')
+                    if '[' in vals[1] and ']' in vals[1]:
+                        vals[1] = words[vals[1][1:-1]]
+                    dbQuery[vals[0]] = vals[1]
             elif i == 3:
-                searchby = codePoint
-            elif i == 4:
                 if codePoint != "":
                     atts = codePoint.split(',')
                     for att in atts:
-                        at = att.split('.')
-                        attributes.append((at[0], at[1]))
-            elif i == 5:
-                if codePoint != "":
-                    generated = codePoint.split(',')
+                        if '[[' in att and ']]' in att:
+                            # Generate attributes randomly
+                            at = att[2:-2]
+                            attVals = mongo.db[lang].find_one({ u'namespace': u'grammar', u'type': u'attribute', u'name': at })['value']
+                            attVal = attVals[randint(0, len(attVals)-1)]
+                            dbAttributes.append((at, attVal))
+                        elif '[' in att and ']' in att:
+                            # Pull attributes from input item
+                            #TODO: finish implementing
+                            at = att[2:-2]
+                            dbAttributes.append('to be continued')
+                        else:
+                            # Attributes are defined as literals
+                            at = att.split('.')
+                            dbAttributes.append((at[0], at[1]))
+            elif i == 4:
+                returnValue = codePoint
             i += 1
-        item = items[index].lower()
+
+        item = items[itemIndex].lower()
         if item == "vocab":
-            if poi == "Stem":
-                searchDict = {u'name': words['type']}
-                for attribute in attributes:
-                    searchDict[attribute[0]] = attribute[1]
-                stemCode = unicode(mongo.db[lang].find_one(searchDict)['value'])
-                parsedList.append(stemCode)
+            for attribute in dbAttributes:
+                dbQuery[attribute[0]] = attribute[1]
+            dbResult = unicode(mongo.db[lang].find_one(dbQuery)[returnValue])
+            if '{{' in dbResult and '}}' in dbResult:
+                # Replace stem templates with actual stems
+                #TODO: do this
+                dbResult = dbResult
+            stemCode = "<%s%s>%s</%s>" % (html_item, html_attributes, dbResult, html_item)
+            parsedList.append(stemCode)
     for item in parsedList:
-        fullCode = re.sub(r'(\{\{[\w\d\s\-_|,.]+\}\})', item, fullCode, 1)
+        fullCode = re.sub(r'(\{\{.+\}\})', item, fullCode, 1)
     return fullCode
 
 # index/home page
@@ -514,9 +538,13 @@ def preview_exercise(lang, exercise_id):
         return redirect("/lang/%s/exercises/%s/%s" % (lang, exercise_id, vocab_id))
 
 # Preview an exercise with a specific word
-@app.route("/lang/<lang>/exercises/<exercise_id>/<vocab_id>")
+@app.route("/lang/<lang>/exercises/<exercise_id>/<vocab_id>", methods=["GET", "POST"])
 def preview_exercise_with_word(lang, exercise_id, vocab_id):
-    return preview_exercise_generic(lang, exercise_id, vocab_id)
+    if request.method == "GET":
+        return preview_exercise_generic(lang, exercise_id, vocab_id)
+    elif request.method == "POST":
+        vocab_id = request.form['vocabid']
+        return redirect("/lang/%s/exercises/%s/%s" % (lang, exercise_id, vocab_id))
 
 # Edit an exercise
 @app.route("/lang/<lang>/exercises/<exercise>/edit")
