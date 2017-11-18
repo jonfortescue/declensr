@@ -39,7 +39,7 @@ Some exercises may require adding new functionality to Declensr. If you're confi
 ### Implementing new grammars
 For some languages, all the functionality you need will already be built into Declensr's codebase. In these cases, all you need to do is create a new grammar definition for Declensr to parse. Thankfully, this isn't to difficult.
 
-In the future, Declensr will be able to auto-generate grammars from Wiktionary templates. In the meantime, you can base your grammar on the existing grammar files, such as [`greek.grammar`](https://github.com/jonfortescue/declensr/blob/master/greek.grammar).
+In the future, Declensr will be able to auto-generate grammars from Wiktionary templates. In the meantime, you can base your grammar on the existing grammar files, such as [`greek.grammar`](https://github.com/jonfortescue/declensr/blob/master/grammars/greek.grammar).
 
 #### Classes, Items, and Attributes
 Grammars are treated as tree structures, where grammar concepts are divided into *Classes* (e.g. "Nouns", "Verbs"), *Items* (e.g. "Articles", "Pronouns"), and *Types* (specific ways the concept is handled under that grammar) with individual *Attributes*. Using the example of nouns,
