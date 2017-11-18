@@ -13,6 +13,10 @@ sys.setdefaultencoding('utf-8')
 app = Flask(__name__)
 mongo = PyMongo(app) # establish MongoDB connection
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html', title="404", error=e)
+
 # constants
 RULES_LEVEL = 2
 ATTRIBUTE_LEVEL = 3
@@ -290,12 +294,16 @@ def parse_exercise_code(lang, fullCode, exercise, preview, words):
         if item == "vocab":
             for attribute in dbAttributes:
                 dbQuery[attribute[0]] = attribute[1]
-            dbResult = unicode(mongo.db[lang].find_one(dbQuery)[returnValue])
-            if '{{' in dbResult and '}}' in dbResult:
+            dbResult = mongo.db[lang].find_one(dbQuery)
+            if dbResult is None:
+                result = "&mdash;"
+            else:
+                result = unicode(dbResult[returnValue])
+            if '{{' in result and '}}' in result:
                 # Replace stem templates with actual stems
                 #TODO: do this
-                dbResult = dbResult
-            stemCode = "<%s%s>%s</%s>" % (html_item, html_attributes, dbResult, html_item)
+                result = result
+            stemCode = "<%s%s>%s</%s>" % (html_item, html_attributes, result, html_item)
             parsedList.append(stemCode)
     for item in parsedList:
         fullCode = re.sub(r'(\{\{.+\}\})', item, fullCode, 1)
