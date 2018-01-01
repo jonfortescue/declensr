@@ -309,6 +309,13 @@ def parse_exercise_code(lang, fullCode, exercise, preview, words):
         fullCode = re.sub(r'(\{\{.+\}\})', item, fullCode, 1)
     return fullCode
 
+# Security check: prevents accessing non-language databases
+def security_check(lang):
+    return re.match(r'^[a-z]{2,3}(-[\w]{1,4})?$', lang) is None
+
+def invalid_language_code():
+    return "INVALID LANGUAGE CODE"
+
 # index/home page
 @app.route("/")
 def home():
@@ -319,6 +326,8 @@ def home():
 # Language page
 @app.route("/lang/<lang>", methods=['GET', 'POST', r'DELETE'])
 def lang(lang):
+    if security_check(lang):
+        return invalid_language_code()
     # Default page access
     if request.method == 'GET':
         # If the language hasn't been defined in the database, it needs to be created
@@ -344,6 +353,8 @@ def lang(lang):
 # Edit grammar
 @app.route("/lang/<lang>/edit", methods=['GET', 'POST'])
 def edit_grammar(lang):
+    if security_check(lang):
+        return invalid_language_code()
     if request.method == "GET":
         name = mongo.db[lang].find_one({u'type': u'display'})['value']
         return render_template("create.html", title="Editing " + name, desc="Edit the grammar for the %s language to correct any errors. " % (name)
@@ -356,6 +367,8 @@ def edit_grammar(lang):
 # Vocab dashboard
 @app.route("/lang/<lang>/vocab")
 def vocab(lang):
+    if security_check(lang):
+        return invalid_language_code()
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
@@ -390,6 +403,8 @@ def vocab_add_edit_generic_post(lang):
 # Add vocab
 @app.route("/lang/<lang>/vocab/add", methods=["GET", "POST"])
 def add_vocab(lang):
+    if security_check(lang):
+        return invalid_language_code()
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
@@ -408,6 +423,8 @@ def add_vocab(lang):
 # Edit a vocab word
 @app.route("/lang/<lang>/vocab/<vocabid>", methods=["GET", "POST", r"DELETE"])
 def edit_vocab(lang, vocabid):
+    if security_check(lang):
+        return invalid_language_code()
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
@@ -431,6 +448,8 @@ def edit_vocab(lang, vocabid):
 # Exercise dashboard
 @app.route("/lang/<lang>/exercises", methods=["GET", r"DELETE"])
 def exercises(lang):
+    if security_check(lang):
+        return invalid_language_code()
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
@@ -444,6 +463,8 @@ def exercises(lang):
 # Add an exercise
 @app.route("/lang/<lang>/exercises/add", methods=["GET", "POST"])
 def add_exercises(lang):
+    if security_check(lang):
+        return invalid_language_code()
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
@@ -539,6 +560,8 @@ def preview_exercise_generic(lang, exercise_id, vocab_id=None):
 # Preview an exercise
 @app.route("/lang/<lang>/exercises/<exercise_id>", methods=["GET", "POST"])
 def preview_exercise(lang, exercise_id):
+    if security_check(lang):
+        return invalid_language_code()
     if request.method == "GET":
         return preview_exercise_generic(lang, exercise_id)
     elif request.method == "POST":
@@ -548,6 +571,8 @@ def preview_exercise(lang, exercise_id):
 # Preview an exercise with a specific word
 @app.route("/lang/<lang>/exercises/<exercise_id>/<vocab_id>", methods=["GET", "POST"])
 def preview_exercise_with_word(lang, exercise_id, vocab_id):
+    if security_check(lang):
+        return invalid_language_code()
     if request.method == "GET":
         return preview_exercise_generic(lang, exercise_id, vocab_id)
     elif request.method == "POST":
@@ -557,6 +582,8 @@ def preview_exercise_with_word(lang, exercise_id, vocab_id):
 # Edit an exercise
 @app.route("/lang/<lang>/exercises/<exercise>/edit")
 def edit_exercise(lang, exercise):
+    if security_check(lang):
+        return invalid_language_code()
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
@@ -566,6 +593,8 @@ def edit_exercise(lang, exercise):
 # Do an exercise
 @app.route("/lang/<lang>/exercises/<exercise>/do")
 def do_exercise(lang, exercise):
+    if security_check(lang):
+        return invalid_language_code()
     if mongo.db[lang].count() == 0:
         return redirect("/lang/%s" % (lang))
     else:
