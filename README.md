@@ -21,7 +21,9 @@ To build Declensr:
 5. Install the dependencies with pip. They will all be automatically installed if you run `pip flask_pymongo`.
 6. In a separate terminal, navigate to the `mongod` executable and run it
 7. In the original terminal, set your environment variables. On Unix-based systems, run `export FLASK_APP=app.py`, while on Windows run `set FLASK_APP=app.py`. If you would like debugging to be enabled, run `export FLASK_DEBUG=1` or `set FLASK_DEBUG=1`, depending on your platform.
-8. Run the application with the command `flask run --host=0.0.0.0`. Navigate to the web app at http://localhost:5000.
+8. Run the application with the command `flask run`. Navigate to the web app at http://127.0.0.1:5000.
+
+**Security Note**: By default, Flask only accepts requests to 127.0.0.1. This is ideal for testing purposes. If you need to allow access from outside, you can specify a hostname using the `--host` flag. Please note, however, that Declensr is considered to be in ***alpha*** state and is not being developed with a keen eye on security. Thus, it is recommended that you do *not* host Declensr on a machine with other web apps, especially ones that use MongoDB.
 
 ## Ways you can contribute
 Declensr is completely FOSS and designed to be highly extensible. If you want to use Declensr to study a language that has not been implemented yet, you will need to do some legwork to get it working. If you do this, please open a pull request to the main repo so everyone else can enjoy that language as well!
